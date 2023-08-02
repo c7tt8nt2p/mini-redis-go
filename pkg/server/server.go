@@ -4,39 +4,46 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"mini-redis-go/pkg/config"
+	"mini-redis-go/pkg/core"
 	"net"
 	"os"
-	"strings"
 )
 
-func StartServer() {
-	// initialize a listener
-	listener := startListener()
-	defer func(listener net.Listener) {
-		fmt.Println("Closing the listener...")
-		err := listener.Close()
-		if err != nil {
-			fmt.Println("Error when closing a listener:", err.Error())
-		}
-	}(*listener)
-	// listener started
-	fmt.Println("Server started...", config.ConnectionHost+":"+config.ConnectionPort)
-
-	for {
-		// incoming connection.
-		connection := acceptANewConnection(listener)
-		go handleConnection(*connection)
-	}
+type MiniRedisServer interface {
+	Start() *net.Listener
 }
 
-func startListener() *net.Listener {
-	listener, err := net.Listen("tcp", config.ConnectionHost+":"+config.ConnectionPort)
+type Server struct {
+	Addr string
+}
+
+func NewServer(host, port string) *Server {
+	s := Server{
+		Addr: host + ":" + port,
+	}
+	return &s
+
+}
+
+func (s *Server) Start() {
+	listener, err := net.Listen("tcp", s.Addr)
 	if err != nil {
 		fmt.Println("Error when initialize a connection:", err.Error())
 		os.Exit(1)
 	}
-	return &listener
+	defer func(listener net.Listener) {
+		err := listener.Close()
+		if err != nil {
+			fmt.Println("Error when closing a listener:", err.Error())
+		}
+	}(listener)
+	fmt.Println("Server started...", s.Addr)
+
+	for {
+		// incoming connection.
+		connection := acceptANewConnection(&listener)
+		go handleConnection(*connection)
+	}
 }
 
 func acceptANewConnection(listener *net.Listener) *net.Conn {
@@ -67,24 +74,48 @@ func handleConnection(connection net.Conn) {
 			}
 			fmt.Println("Error reading:", err.Error())
 		}
-		trimmedMessage := strings.TrimSpace(message)
-		if trimmedMessage == "exit" {
+
+		if isExit(message) {
 			fmt.Println("Bye", connection.RemoteAddr())
 			break
 		}
-		if trimmedMessage == "PING" {
+		if isPing(message) {
 			_, err = connection.Write([]byte("PONG\n"))
 			if err != nil {
 				fmt.Println("Error sending response:", err)
 				break
 			}
+			continue
+		}
+
+		setCli, setK, setV := isSetCli(message)
+		getCli, getK := isGetCli(message)
+		if setCli {
+			myRedis := core.NewMyRedis()
+			myRedis.Set(setK, setV)
+
+			_, err = connection.Write([]byte("Set ok" + "\n"))
+			if err != nil {
+				fmt.Println("Error sending response:", err)
+				break
+			}
+		} else if getCli {
+			myRedis := core.NewMyRedis()
+			v := myRedis.Get(getK)
+
+			_, err = connection.Write([]byte(v + "\n"))
+			if err != nil {
+				fmt.Println("Error sending response:", err)
+				break
+			}
 		} else {
-			_, err = connection.Write([]byte(trimmedMessage + "\n"))
+			_, err = connection.Write([]byte(message + "\n"))
 			if err != nil {
 				fmt.Println("Error sending response:", err)
 				break
 			}
 		}
+
 		fmt.Print("\t", connection.RemoteAddr().String()+" : ", message)
 	}
 }
