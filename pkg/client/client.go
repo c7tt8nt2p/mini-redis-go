@@ -11,7 +11,7 @@ import (
 
 func StartClient() {
 	// initialize a connection
-	connection := startConnection()
+	connection := StartConnection()
 	defer func(connection net.Conn) {
 		err := connection.Close()
 		if err != nil {
@@ -22,10 +22,10 @@ func StartClient() {
 	fmt.Println("Connected to the server.")
 
 	go handleMessagesFromServer(connection)
-	handleMessagesToServer(connection)
+	handleMessagesFromClient(connection)
 }
 
-func startConnection() *net.Conn {
+func StartConnection() *net.Conn {
 	connection, err := net.Dial("tcp", config.ConnectionHost+":"+config.ConnectionPort)
 	if err != nil {
 		fmt.Println("Error when connecting to a server:", err.Error())
@@ -34,7 +34,7 @@ func startConnection() *net.Conn {
 	return &connection
 }
 
-func handleMessagesToServer(connection *net.Conn) {
+func handleMessagesFromClient(connection *net.Conn) {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		message, err := reader.ReadString('\n')
