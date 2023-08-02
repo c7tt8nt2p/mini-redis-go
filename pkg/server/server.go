@@ -78,6 +78,12 @@ func handleConnection(connection net.Conn) {
 				fmt.Println("Error sending response:", err)
 				break
 			}
+		} else {
+			_, err = connection.Write([]byte(trimmedMessage + "\n"))
+			if err != nil {
+				fmt.Println("Error sending response:", err)
+				break
+			}
 		}
 		fmt.Print("\t", connection.RemoteAddr().String()+" : ", message)
 	}

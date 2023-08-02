@@ -9,9 +9,33 @@ import (
 	"strings"
 )
 
+type MiniRedisClient interface {
+	Connect()
+}
+
+type Client struct {
+	addr string
+}
+
+func NewClient(host, port string) *Client {
+	c := Client{
+		addr: host + ":" + port,
+	}
+	return &c
+}
+
+func (c *Client) Connect() *net.Conn {
+	connection, err := net.Dial("tcp", config.ConnectionHost+":"+config.ConnectionPort)
+	if err != nil {
+		fmt.Println("Error when connecting to a server:", err.Error())
+		os.Exit(1)
+	}
+	return &connection
+}
+
 func StartClient() {
-	// initialize a connection
-	connection := StartConnection()
+	client := NewClient(config.ConnectionHost, config.ConnectionPort)
+	connection := client.Connect()
 	defer func(connection net.Conn) {
 		err := connection.Close()
 		if err != nil {
@@ -23,15 +47,6 @@ func StartClient() {
 
 	go handleMessagesFromServer(connection)
 	handleMessagesFromClient(connection)
-}
-
-func StartConnection() *net.Conn {
-	connection, err := net.Dial("tcp", config.ConnectionHost+":"+config.ConnectionPort)
-	if err != nil {
-		fmt.Println("Error when connecting to a server:", err.Error())
-		os.Exit(1)
-	}
-	return &connection
 }
 
 func handleMessagesFromClient(connection *net.Conn) {
