@@ -7,7 +7,8 @@ import (
 type Redis interface {
 	Get(key string) string
 	Set(key string, value string)
-	All() map[string][]byte
+	Db() map[string][]byte
+	Exists(key string) bool
 }
 
 type myRedis struct {
@@ -41,6 +42,11 @@ func (c *myRedis) Set(key, value string) {
 	c.db.cache[key] = []byte(value)
 }
 
-func (c *myRedis) All() map[string][]byte {
+func (c *myRedis) Db() map[string][]byte {
 	return c.db.cache
+}
+
+func (c *myRedis) Exists(key string) bool {
+	_, exists := c.db.cache[key]
+	return exists
 }

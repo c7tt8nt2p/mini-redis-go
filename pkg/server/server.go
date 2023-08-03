@@ -90,8 +90,16 @@ func handleConnection(connection net.Conn) {
 		case setCmd:
 			k, v := extractSetCli(message)
 			myRedis := core.NewMyRedis()
-			myRedis.Set(k, v)
 
+			if myRedis.Exists(k) {
+				fmt.Println("	exist")
+				myRedis.Set(k, v)
+				cacheRewrite(&myRedis)
+			} else {
+				fmt.Println("	not exist")
+				myRedis.Set(k, v)
+				cacheAppend(k, v)
+			}
 			_, err = connection.Write([]byte("Set ok" + "\n"))
 			if err != nil {
 				fmt.Println("Error sending response:", err)
