@@ -75,47 +75,46 @@ func handleConnection(connection net.Conn) {
 			fmt.Println("Error reading:", err.Error())
 		}
 
-		if isExit(message) {
+		cmdType := parse(message)
+		switch cmdType {
+		case exitCmd:
 			fmt.Println("Bye", connection.RemoteAddr())
 			break
-		}
-		if isPing(message) {
+		case pingCmd:
 			_, err = connection.Write([]byte("PONG\n"))
 			if err != nil {
 				fmt.Println("Error sending response:", err)
 				break
 			}
 			continue
-		}
-
-		setCli, setK, setV := isSetCli(message)
-		getCli, getK := isGetCli(message)
-		if setCli {
+		case setCmd:
+			k, v := extractSetCli(message)
 			myRedis := core.NewMyRedis()
-			myRedis.Set(setK, setV)
+			myRedis.Set(k, v)
 
 			_, err = connection.Write([]byte("Set ok" + "\n"))
 			if err != nil {
 				fmt.Println("Error sending response:", err)
 				break
 			}
-		} else if getCli {
+		case getCmd:
+			k := extractGetCli(message)
 			myRedis := core.NewMyRedis()
-			v := myRedis.Get(getK)
+			v := myRedis.Get(k)
 
 			_, err = connection.Write([]byte(v + "\n"))
 			if err != nil {
 				fmt.Println("Error sending response:", err)
 				break
 			}
-		} else {
+		case otherCmd:
 			_, err = connection.Write([]byte(message + "\n"))
 			if err != nil {
 				fmt.Println("Error sending response:", err)
 				break
 			}
-		}
 
+		}
 		fmt.Print("\t", connection.RemoteAddr().String()+" : ", message)
 	}
 }

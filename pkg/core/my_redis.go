@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -39,9 +38,7 @@ func (c *myRedis) Set(key, value string) {
 	c.db.mutex.Lock()
 	defer c.db.mutex.Unlock()
 
-	fmt.Println("key", key)
 	c.db.cache[key] = []byte(value)
-	fmt.Println("after set", c.db.cache)
 }
 
 func (c *myRedis) All() map[string][]byte {
