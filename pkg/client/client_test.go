@@ -2,12 +2,14 @@ package client_test
 
 import (
 	"crypto/tls"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"mini-redis-go/pkg/client"
 	"mini-redis-go/pkg/config"
 	"mini-redis-go/pkg/server"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -19,9 +21,10 @@ func createTempFolder() string {
 	return folder
 }
 
-func startServer(host, port, cacheFolder string) {
+func startServer(host, port, cacheFolder string) *server.Server {
 	s := server.NewServer(host, port, cacheFolder)
 	go s.Start()
+	return s
 }
 
 func connectToServer(host, port string) *tls.Conn {
@@ -50,27 +53,15 @@ func TestPingPong(t *testing.T) {
 	defer func(path string) {
 		_ = os.RemoveAll(path)
 	}(tempFolder)
-	startServer(config.ConnectionHost, config.ConnectionPort, tempFolder)
+	s := startServer(config.ConnectionHost, config.ConnectionPort, tempFolder)
 	conn := connectToServer(config.ConnectionHost, config.ConnectionPort)
 
 	write(t, conn, "PING\n")
 	response := read(t, conn)
 
 	assert.Equal(t, "PONG\n", response)
-}
 
-func TestSet(t *testing.T) {
-	tempFolder := createTempFolder()
-	defer func(path string) {
-		_ = os.RemoveAll(path)
-	}(tempFolder)
-	startServer(config.ConnectionHost, config.ConnectionPort, tempFolder)
-	conn := connectToServer(config.ConnectionHost, config.ConnectionPort)
-
-	write(t, conn, "set hello world\n")
-	response := read(t, conn)
-
-	assert.Equal(t, "Set ok\n", response)
+	s.Stop()
 }
 
 func TestSetAndGet(t *testing.T) {
@@ -78,7 +69,7 @@ func TestSetAndGet(t *testing.T) {
 	defer func(path string) {
 		_ = os.RemoveAll(path)
 	}(tempFolder)
-	startServer(config.ConnectionHost, config.ConnectionPort, tempFolder)
+	s := startServer(config.ConnectionHost, config.ConnectionPort, tempFolder)
 	conn := connectToServer(config.ConnectionHost, config.ConnectionPort)
 
 	write(t, conn, "set hello world\n")
@@ -88,4 +79,31 @@ func TestSetAndGet(t *testing.T) {
 	write(t, conn, "get hello\n")
 	response2 := read(t, conn)
 	assert.Equal(t, "world\n", response2)
+
+	s.Stop()
+}
+
+func TestCache(t *testing.T) {
+	tempFolder := createTempFolder()
+	defer func(path string) {
+		_ = os.RemoveAll(path)
+	}(tempFolder)
+	fmt.Println("tempFolder", tempFolder)
+	createCacheFileWithData(tempFolder, "testKey", "tesValue")
+	s := startServer(config.ConnectionHost, config.ConnectionPort, tempFolder)
+	conn := connectToServer(config.ConnectionHost, config.ConnectionPort)
+
+	write(t, conn, "get testKey\n")
+	response2 := read(t, conn)
+	assert.Equal(t, "tesValue\n", response2)
+
+	s.Stop()
+}
+
+func createCacheFileWithData(folder, k, v string) {
+	file, _ := os.OpenFile(filepath.Join(folder, config.CacheFileName), os.O_CREATE|os.O_WRONLY, 0644)
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
+	_, _ = file.WriteString(fmt.Sprintf("%s=%s\n", k, v))
 }

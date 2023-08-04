@@ -16,21 +16,24 @@ type MiniRedisServer interface {
 }
 
 type Server struct {
+	Listener    *net.Listener
 	Addr        string
 	CacheFolder string
+	stopSignal  chan bool
 }
 
 func NewServer(host, port, cacheFolder string) *Server {
 	s := Server{
 		Addr:        host + ":" + port,
 		CacheFolder: cacheFolder,
+		stopSignal:  make(chan bool, 1),
 	}
 	return &s
 
 }
 
 func (s *Server) Start() {
-	cert := s.loadCert()
+	cert := loadCert()
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{*cert},
 		ClientAuth:   tls.RequireAnyClientCert,
@@ -40,24 +43,42 @@ func (s *Server) Start() {
 		fmt.Println("Error when initialize a connection:", err.Error())
 		os.Exit(1)
 	}
-	defer func(listener net.Listener) {
-		err := listener.Close()
-		if err != nil {
-			fmt.Println("Error when closing a listener:", err.Error())
-		}
-	}(listener)
+	s.Listener = &listener
+	//defer func(listener net.Listener) {
+	//	err := listener.Close()
+	//	if err != nil {
+	//		fmt.Println("Error when closing a listener:", err.Error())
+	//	}
+	//}(listener)
+
 	core.InitOnce(s.CacheFolder, config.CacheFileName)
 	readCache(s.CacheFolder, config.CacheFileName)
 	fmt.Println("Server started...", s.Addr)
 
+	go func() {
+		stop := <-s.stopSignal
+		if stop {
+			fmt.Println("Stopping the server...")
+			_ = (*s.Listener).Close()
+		}
+	}()
+
 	for {
 		// incoming connection.
-		conn := acceptANewConnection(&listener)
+		conn, err := acceptANewConnection(&listener)
+		if err != nil {
+			break
+		}
 		go handleConnection(*s, *conn)
 	}
+
 }
 
-func (s *Server) loadCert() *tls.Certificate {
+func (s *Server) Stop() {
+	s.stopSignal <- true
+}
+
+func loadCert() *tls.Certificate {
 	cert, err := tls.LoadX509KeyPair(config.PublicKeyFile, config.PrivateKeyFile)
 	if err != nil {
 		panic(fmt.Sprintf("Error loading certificate: %s", err))
@@ -65,14 +86,13 @@ func (s *Server) loadCert() *tls.Certificate {
 	return &cert
 }
 
-func acceptANewConnection(listener *net.Listener) *net.Conn {
+func acceptANewConnection(listener *net.Listener) (*net.Conn, error) {
 	conn, err := (*listener).Accept()
-	fmt.Println("Incoming connection from:", conn.RemoteAddr())
 	if err != nil {
-		fmt.Println("Error when accepting a new connection: ", err.Error())
-		os.Exit(1)
+		return nil, err
 	}
-	return &conn
+	fmt.Println("Incoming connection from:", conn.RemoteAddr())
+	return &conn, nil
 }
 
 func handleConnection(s Server, conn net.Conn) {
