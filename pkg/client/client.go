@@ -1,8 +1,8 @@
 package client
 
 import (
+	"crypto/rand"
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"mini-redis-go/pkg/config"
 	"net"
@@ -14,22 +14,24 @@ type MiniRedisClient interface {
 }
 
 type Client struct {
-	addr string
+	addr           string
+	publicKeyFile  string
+	privateKeyFile string
 }
 
-func NewClient(host, port string) *Client {
+func NewClient(host, port, publicKeyFile, privateKeyFile string) *Client {
 	c := Client{
-		addr: host + ":" + port,
+		addr:           host + ":" + port,
+		publicKeyFile:  publicKeyFile,
+		privateKeyFile: privateKeyFile,
 	}
 	return &c
 }
 
 func (c *Client) Connect() *tls.Conn {
-	certPool := loadCert()
-	tlsConfig := &tls.Config{
-		RootCAs:            certPool,
-		InsecureSkipVerify: true, // Set to false for production use, when you have a valid certificate.
-	}
+	cert := loadCert()
+	tlsConfig := &tls.Config{Certificates: []tls.Certificate{*cert}, InsecureSkipVerify: true}
+	tlsConfig.Rand = rand.Reader
 
 	conn, err := tls.Dial("tcp", c.addr, tlsConfig)
 	if err != nil {
@@ -39,17 +41,10 @@ func (c *Client) Connect() *tls.Conn {
 	return conn
 }
 
-func loadCert() *x509.CertPool {
-	cert, err := os.ReadFile(config.PublicKeyFile)
+func loadCert() *tls.Certificate {
+	cert, err := tls.LoadX509KeyPair(config.ClientPublicKeyFile, config.ClientPrivateKeyFile)
 	if err != nil {
 		panic(fmt.Sprintf("Error loading certificate: %s", err))
 	}
-
-	certPool := x509.NewCertPool()
-	ok := certPool.AppendCertsFromPEM(cert)
-	if !ok {
-		panic("Failed to parse server certificate")
-	}
-
-	return certPool
+	return &cert
 }

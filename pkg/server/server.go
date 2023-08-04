@@ -31,7 +31,10 @@ func NewServer(host, port, cacheFolder string) *Server {
 
 func (s *Server) Start() {
 	cert := s.loadCert()
-	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cert}}
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{*cert},
+		ClientAuth:   tls.RequireAnyClientCert,
+	}
 	listener, err := tls.Listen("tcp", s.Addr, tlsConfig)
 	if err != nil {
 		fmt.Println("Error when initialize a connection:", err.Error())
@@ -49,34 +52,34 @@ func (s *Server) Start() {
 
 	for {
 		// incoming connection.
-		connection := acceptANewConnection(&listener)
-		go handleConnection(*s, *connection)
+		conn := acceptANewConnection(&listener)
+		go handleConnection(*s, *conn)
 	}
 }
 
-func (s *Server) loadCert() tls.Certificate {
+func (s *Server) loadCert() *tls.Certificate {
 	cert, err := tls.LoadX509KeyPair(config.PublicKeyFile, config.PrivateKeyFile)
 	if err != nil {
 		panic(fmt.Sprintf("Error loading certificate: %s", err))
 	}
-	return cert
+	return &cert
 }
 
 func acceptANewConnection(listener *net.Listener) *net.Conn {
-	connection, err := (*listener).Accept()
-	fmt.Println("Incoming connection from:", connection.RemoteAddr())
+	conn, err := (*listener).Accept()
+	fmt.Println("Incoming connection from:", conn.RemoteAddr())
 	if err != nil {
 		fmt.Println("Error when accepting a new connection: ", err.Error())
 		os.Exit(1)
 	}
-	return &connection
+	return &conn
 }
 
 func handleConnection(s Server, conn net.Conn) {
 	defer func(connection net.Conn) {
 		err := connection.Close()
 		if err != nil {
-			fmt.Println("Error when closing a conn:", err.Error())
+			fmt.Println("Error when closing a connection:", err.Error())
 		}
 	}(conn)
 
@@ -84,11 +87,12 @@ func handleConnection(s Server, conn net.Conn) {
 	for {
 		message, err := reader.ReadString('\n')
 		if err != nil {
-			if err == io.EOF {
+			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				fmt.Println("Goodbye", conn.RemoteAddr())
-				break
+			} else {
+				fmt.Println("Error reading:", err.Error())
 			}
-			fmt.Println("Error reading:", err.Error())
+			break
 		}
 
 		cmdType := parse(message)
@@ -99,7 +103,7 @@ func handleConnection(s Server, conn net.Conn) {
 		case pingCmd:
 			_, err = conn.Write([]byte("PONG\n"))
 			if err != nil {
-				fmt.Println("Error sending response:", err)
+				fmt.Println("Error sending response to pingCmd:", err)
 				break
 			}
 			continue
@@ -116,8 +120,8 @@ func handleConnection(s Server, conn net.Conn) {
 			}
 			_, err = conn.Write([]byte("Set ok" + "\n"))
 			if err != nil {
-				fmt.Println("Error sending response:", err)
-				break
+				fmt.Println("Error sending response to setCmd:", err)
+				_ = conn.Close()
 			}
 		case getCmd:
 			k := extractGetCli(message)
@@ -126,13 +130,13 @@ func handleConnection(s Server, conn net.Conn) {
 
 			_, err = conn.Write([]byte(v + "\n"))
 			if err != nil {
-				fmt.Println("Error sending response:", err)
+				fmt.Println("Error sending response to getCmd:", err)
 				break
 			}
 		case otherCmd:
 			_, err = conn.Write([]byte(message + "\n"))
 			if err != nil {
-				fmt.Println("Error sending response:", err)
+				fmt.Println("Error sending response to otherCmd:", err)
 				break
 			}
 

@@ -2,29 +2,29 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"fmt"
 	"mini-redis-go/pkg/client"
 	"mini-redis-go/pkg/config"
-	"net"
 	"os"
 	"strings"
 )
 
 func main() {
-	c := client.NewClient(config.ConnectionHost, config.ConnectionPort)
+	c := client.NewClient(config.ConnectionHost, config.ConnectionPort, config.ClientPublicKeyFile, config.ClientPrivateKeyFile)
 	conn := c.Connect()
-	defer func(connection net.Conn) {
+	defer func(connection *tls.Conn) {
 		err := connection.Close()
 		if err != nil {
 			fmt.Println("Error when closing a connection:", err.Error())
 		}
-	}(*conn)
+	}(conn)
 	fmt.Println("Connected to the server")
 	go handleMessagesFromServer(conn)
 	handleMessagesFromClient(conn)
 }
 
-func handleMessagesFromServer(connection *net.Conn) {
+func handleMessagesFromServer(connection *tls.Conn) {
 	buffer := make([]byte, 1024)
 
 	for {
@@ -39,7 +39,7 @@ func handleMessagesFromServer(connection *net.Conn) {
 	}
 }
 
-func handleMessagesFromClient(connection *net.Conn) {
+func handleMessagesFromClient(connection *tls.Conn) {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		message, err := reader.ReadString('\n')

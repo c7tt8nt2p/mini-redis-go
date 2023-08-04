@@ -25,7 +25,7 @@ func startServer(host, port, cacheFolder string) {
 }
 
 func connectToServer(host, port string) *tls.Conn {
-	c := client.NewClient(host, port)
+	c := client.NewClient(host, port, config.ClientPublicKeyFile, config.ClientPrivateKeyFile)
 	conn := c.Connect()
 	return conn
 }
