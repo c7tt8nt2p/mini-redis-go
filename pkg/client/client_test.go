@@ -1,12 +1,12 @@
 package client_test
 
 import (
+	"crypto/tls"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"mini-redis-go/pkg/client"
 	"mini-redis-go/pkg/config"
 	"mini-redis-go/pkg/server"
-	"net"
 	"os"
 	"testing"
 )
@@ -24,19 +24,19 @@ func startServer(host, port, cacheFolder string) {
 	go s.Start()
 }
 
-func connectToServer(host, port string) *net.Conn {
+func connectToServer(host, port string) *tls.Conn {
 	c := client.NewClient(host, port)
 	conn := c.Connect()
 	return conn
 }
 
-func write(t *testing.T, conn *net.Conn, s string) {
+func write(t *testing.T, conn *tls.Conn, s string) {
 	if _, err1 := (*conn).Write([]byte(s)); err1 != nil {
 		t.Error("Error sending a message", err1)
 	}
 }
 
-func read(t *testing.T, conn *net.Conn) string {
+func read(t *testing.T, conn *tls.Conn) string {
 	buf := make([]byte, 1024)
 	n, err2 := (*conn).Read(buf)
 	if err2 != nil {

@@ -2,6 +2,7 @@ package server
 
 import (
 	"bufio"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"mini-redis-go/pkg/config"
@@ -29,7 +30,9 @@ func NewServer(host, port, cacheFolder string) *Server {
 }
 
 func (s *Server) Start() {
-	listener, err := net.Listen("tcp", s.Addr)
+	cert := s.loadCert()
+	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cert}}
+	listener, err := tls.Listen("tcp", s.Addr, tlsConfig)
 	if err != nil {
 		fmt.Println("Error when initialize a connection:", err.Error())
 		os.Exit(1)
@@ -49,6 +52,14 @@ func (s *Server) Start() {
 		connection := acceptANewConnection(&listener)
 		go handleConnection(*s, *connection)
 	}
+}
+
+func (s *Server) loadCert() tls.Certificate {
+	cert, err := tls.LoadX509KeyPair(config.PublicKeyFile, config.PrivateKeyFile)
+	if err != nil {
+		panic(fmt.Sprintf("Error loading certificate: %s", err))
+	}
+	return cert
 }
 
 func acceptANewConnection(listener *net.Listener) *net.Conn {
