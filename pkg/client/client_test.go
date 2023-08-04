@@ -9,13 +9,13 @@ import (
 )
 
 func TestPingPong(t *testing.T) {
-	go server.StartServer()
+	s := server.NewServer(config.ConnectionHost, config.ConnectionPort)
+	go s.Start()
 
 	c := client.NewClient(config.ConnectionHost, config.ConnectionPort)
 	connection := c.Connect()
 
-	_, err1 := (*connection).Write([]byte("PING\n"))
-	if err1 != nil {
+	if _, err1 := (*connection).Write([]byte("PING\n")); err1 != nil {
 		t.Error("Error sending a message", err1)
 	}
 

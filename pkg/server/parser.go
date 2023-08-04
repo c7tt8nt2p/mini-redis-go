@@ -17,6 +17,7 @@ const (
 
 const setCliRegex = `^set ([a-zA-Z0-9]+) ([a-zA-Z0-9]+)$`
 const getCliRegex = `^get ([a-zA-Z0-9]+)$`
+const keyValueRegex = `^([a-zA-Z0-9]+)=([a-zA-Z0-9]+)$`
 
 func parse(s string) CmdType {
 	text := strings.ToLower(strings.TrimSpace(s))
@@ -74,4 +75,15 @@ func extractGetCli(s string) string {
 		return rs[1]
 	}
 	return ""
+}
+
+func extractKeyValueCache(s string) (bool, string, string) {
+	message := strings.TrimSpace(s)
+	rgx := regexp.MustCompile(keyValueRegex)
+	rs := rgx.FindStringSubmatch(message)
+
+	if len(rs) == 3 {
+		return true, rs[1], rs[2]
+	}
+	return false, "", ""
 }

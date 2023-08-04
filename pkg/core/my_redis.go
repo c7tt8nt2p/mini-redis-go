@@ -16,17 +16,35 @@ type myRedis struct {
 }
 
 var instance *myRedis
-var once sync.Once
+var mutex sync.Mutex
 
-func NewMyRedis() Redis {
-	once.Do(func() {
-		db := MyDb{
-			cache: map[string][]byte{},
+//var once sync.Once
+
+//	func GetMyRedis() Redis {
+//		once.Do(func() {
+//			db := MyDb{
+//				cache: map[string][]byte{},
+//			}
+//			instance = &myRedis{
+//				db: &db,
+//			}
+//		})
+//		return instance
+//	}
+
+func GetMyRedis() Redis {
+	if instance == nil {
+		mutex.Lock()
+		defer mutex.Unlock()
+		if instance == nil {
+			db := MyDb{
+				cache: map[string][]byte{},
+			}
+			instance = &myRedis{
+				db: &db,
+			}
 		}
-		instance = &myRedis{
-			db: &db,
-		}
-	})
+	}
 	return instance
 }
 

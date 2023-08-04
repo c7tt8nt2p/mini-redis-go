@@ -37,6 +37,7 @@ func (s *Server) Start() {
 			fmt.Println("Error when closing a listener:", err.Error())
 		}
 	}(listener)
+	readCache()
 	fmt.Println("Server started...", s.Addr)
 
 	for {
@@ -89,14 +90,12 @@ func handleConnection(connection net.Conn) {
 			continue
 		case setCmd:
 			k, v := extractSetCli(message)
-			myRedis := core.NewMyRedis()
+			myRedis := core.GetMyRedis()
 
 			if myRedis.Exists(k) {
-				fmt.Println("	exist")
 				myRedis.Set(k, v)
 				cacheRewrite(&myRedis)
 			} else {
-				fmt.Println("	not exist")
 				myRedis.Set(k, v)
 				cacheAppend(k, v)
 			}
@@ -107,7 +106,7 @@ func handleConnection(connection net.Conn) {
 			}
 		case getCmd:
 			k := extractGetCli(message)
-			myRedis := core.NewMyRedis()
+			myRedis := core.GetMyRedis()
 			v := myRedis.Get(k)
 
 			_, err = connection.Write([]byte(v + "\n"))
