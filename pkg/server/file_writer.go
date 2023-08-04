@@ -6,11 +6,12 @@ import (
 	"mini-redis-go/pkg/config"
 	"mini-redis-go/pkg/core"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
-func cacheRewrite(myRedis *core.Redis) {
-	f, err := os.OpenFile(config.CacheFileName, os.O_CREATE|os.O_WRONLY, 0644)
+func cacheRewrite(myRedis *core.Redis, cacheFolder string) {
+	f, err := os.OpenFile(filepath.Join(cacheFolder, config.CacheFileName), os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Println(err)
 	}
@@ -21,8 +22,8 @@ func cacheRewrite(myRedis *core.Redis) {
 	rewriteAllKeyValues(myRedis, f)
 }
 
-func cacheAppend(key, value string) {
-	f, err := os.OpenFile(config.CacheFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+func cacheAppend(cacheFolder, k, v string) {
+	f, err := os.OpenFile(filepath.Join(cacheFolder, config.CacheFileName), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Println(err)
 	}
@@ -30,7 +31,7 @@ func cacheAppend(key, value string) {
 		_ = f.Close()
 	}(f)
 
-	appendKeyValue(key, value, f)
+	appendKeyValue(k, v, f)
 }
 
 func rewriteAllKeyValues(myRedis *core.Redis, f *os.File) {

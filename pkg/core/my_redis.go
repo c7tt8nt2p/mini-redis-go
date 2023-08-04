@@ -1,6 +1,7 @@
 package core
 
 import (
+	"path/filepath"
 	"sync"
 )
 
@@ -12,27 +13,29 @@ type Redis interface {
 }
 
 type myRedis struct {
-	db *MyDb
+	db            *MyDb
+	cacheFileName string
 }
 
 var instance *myRedis
-var mutex sync.Mutex
+var mutex = &sync.Mutex{}
 
 //var once sync.Once
+//
+//func GetMyRedis(cacheFolder, cacheFileName string) Redis {
+//	once.Do(func() {
+//		db := MyDb{
+//			cache: map[string][]byte{},
+//		}
+//		instance = &myRedis{
+//			db:            &db,
+//			cacheFileName: filepath.Join(cacheFolder, cacheFileName),
+//		}
+//	})
+//	return instance
+//}
 
-//	func GetMyRedis() Redis {
-//		once.Do(func() {
-//			db := MyDb{
-//				cache: map[string][]byte{},
-//			}
-//			instance = &myRedis{
-//				db: &db,
-//			}
-//		})
-//		return instance
-//	}
-
-func GetMyRedis() Redis {
+func InitOnce(cacheFolder, cacheFileName string) {
 	if instance == nil {
 		mutex.Lock()
 		defer mutex.Unlock()
@@ -41,10 +44,14 @@ func GetMyRedis() Redis {
 				cache: map[string][]byte{},
 			}
 			instance = &myRedis{
-				db: &db,
+				db:            &db,
+				cacheFileName: filepath.Join(cacheFolder, cacheFileName),
 			}
 		}
 	}
+}
+
+func GetMyRedis() Redis {
 	return instance
 }
 

@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	s := server.NewServer(config.ConnectionHost, config.ConnectionPort)
+	s := server.NewServer(config.ConnectionHost, config.ConnectionPort, config.CacheFolder)
 	s.Start()
 }

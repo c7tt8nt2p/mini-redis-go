@@ -3,14 +3,14 @@ package server
 import (
 	"bufio"
 	"fmt"
-	"mini-redis-go/pkg/config"
 	"mini-redis-go/pkg/core"
 	"os"
+	"path/filepath"
 )
 
-func readCache() {
-	fmt.Println("Reading cache...")
-	readFile, err := os.Open(config.CacheFileName)
+func readCache(cacheFolder, cacheFileName string) {
+	fmt.Println("Reading cache... from", filepath.Join(cacheFolder, cacheFileName))
+	readFile, err := os.Open(filepath.Join(cacheFolder, cacheFileName))
 	if err != nil {
 		fmt.Println("Error reading cache", err)
 	}

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"mini-redis-go/pkg/config"
 	"mini-redis-go/pkg/core"
 	"net"
 	"os"
@@ -14,12 +15,14 @@ type MiniRedisServer interface {
 }
 
 type Server struct {
-	Addr string
+	Addr        string
+	CacheFolder string
 }
 
-func NewServer(host, port string) *Server {
+func NewServer(host, port, cacheFolder string) *Server {
 	s := Server{
-		Addr: host + ":" + port,
+		Addr:        host + ":" + port,
+		CacheFolder: cacheFolder,
 	}
 	return &s
 
@@ -37,13 +40,14 @@ func (s *Server) Start() {
 			fmt.Println("Error when closing a listener:", err.Error())
 		}
 	}(listener)
-	readCache()
+	core.InitOnce(s.CacheFolder, config.CacheFileName)
+	readCache(s.CacheFolder, config.CacheFileName)
 	fmt.Println("Server started...", s.Addr)
 
 	for {
 		// incoming connection.
 		connection := acceptANewConnection(&listener)
-		go handleConnection(*connection)
+		go handleConnection(*s, *connection)
 	}
 }
 
@@ -57,20 +61,20 @@ func acceptANewConnection(listener *net.Listener) *net.Conn {
 	return &connection
 }
 
-func handleConnection(connection net.Conn) {
+func handleConnection(s Server, conn net.Conn) {
 	defer func(connection net.Conn) {
 		err := connection.Close()
 		if err != nil {
-			fmt.Println("Error when closing a connection:", err.Error())
+			fmt.Println("Error when closing a conn:", err.Error())
 		}
-	}(connection)
+	}(conn)
 
-	reader := bufio.NewReader(connection)
+	reader := bufio.NewReader(conn)
 	for {
 		message, err := reader.ReadString('\n')
 		if err != nil {
 			if err == io.EOF {
-				fmt.Println("Goodbye", connection.RemoteAddr())
+				fmt.Println("Goodbye", conn.RemoteAddr())
 				break
 			}
 			fmt.Println("Error reading:", err.Error())
@@ -79,10 +83,10 @@ func handleConnection(connection net.Conn) {
 		cmdType := parse(message)
 		switch cmdType {
 		case exitCmd:
-			fmt.Println("Bye", connection.RemoteAddr())
+			fmt.Println("Bye", conn.RemoteAddr())
 			break
 		case pingCmd:
-			_, err = connection.Write([]byte("PONG\n"))
+			_, err = conn.Write([]byte("PONG\n"))
 			if err != nil {
 				fmt.Println("Error sending response:", err)
 				break
@@ -94,12 +98,12 @@ func handleConnection(connection net.Conn) {
 
 			if myRedis.Exists(k) {
 				myRedis.Set(k, v)
-				cacheRewrite(&myRedis)
+				cacheRewrite(&myRedis, s.CacheFolder)
 			} else {
 				myRedis.Set(k, v)
-				cacheAppend(k, v)
+				cacheAppend(s.CacheFolder, k, v)
 			}
-			_, err = connection.Write([]byte("Set ok" + "\n"))
+			_, err = conn.Write([]byte("Set ok" + "\n"))
 			if err != nil {
 				fmt.Println("Error sending response:", err)
 				break
@@ -109,19 +113,19 @@ func handleConnection(connection net.Conn) {
 			myRedis := core.GetMyRedis()
 			v := myRedis.Get(k)
 
-			_, err = connection.Write([]byte(v + "\n"))
+			_, err = conn.Write([]byte(v + "\n"))
 			if err != nil {
 				fmt.Println("Error sending response:", err)
 				break
 			}
 		case otherCmd:
-			_, err = connection.Write([]byte(message + "\n"))
+			_, err = conn.Write([]byte(message + "\n"))
 			if err != nil {
 				fmt.Println("Error sending response:", err)
 				break
 			}
 
 		}
-		fmt.Print("\t", connection.RemoteAddr().String()+" : ", message)
+		fmt.Print("\t", conn.RemoteAddr().String()+" : ", message)
 	}
 }
