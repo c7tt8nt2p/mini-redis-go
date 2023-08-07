@@ -1,32 +1,46 @@
 package server
 
 import (
-	"bufio"
 	"fmt"
+	"log"
 	"mini-redis-go/pkg/core"
 	"os"
 	"path/filepath"
 )
 
-func readCache(cacheFolder, cacheFileName string) {
-	fmt.Println("Reading cache... from", filepath.Join(cacheFolder, cacheFileName))
-	readFile, err := os.Open(filepath.Join(cacheFolder, cacheFileName))
+func readCache(myRedis core.Redis, cacheFolder string) {
+	fmt.Println("Reading cache... from", cacheFolder)
+
+	err := filepath.Walk(cacheFolder, func(path string, fileInfo os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !fileInfo.IsDir() {
+			return readCacheFile(myRedis, fileInfo.Name(), path)
+		}
+		return nil
+	})
 	if err != nil {
-		fmt.Println("Error reading cache", err)
+		log.Panic("error reading cache: ", err)
+	}
+	fmt.Println("Reading cache... done")
+}
+
+func readCacheFile(myRedis core.Redis, k, cacheFilePath string) error {
+	fmt.Println("	Uncache:", cacheFilePath)
+	file, err := os.Open(cacheFilePath)
+	if err != nil {
+		return err
 	}
 	defer func(readFile *os.File) {
 		_ = readFile.Close()
-	}(readFile)
+	}(file)
 
-	fileScanner := bufio.NewScanner(readFile)
-	fileScanner.Split(bufio.ScanLines)
-
-	myRedis := core.GetMyRedis()
-	for fileScanner.Scan() {
-		ok, k, v := extractKeyValueCache(fileScanner.Text())
-		if ok {
-			fmt.Println("	Found cache", k, v)
-			myRedis.Set(k, v)
-		}
+	data, err := os.ReadFile(cacheFilePath)
+	if err != nil {
+		return err
 	}
+	myRedis.Set(k, data)
+
+	return nil
 }

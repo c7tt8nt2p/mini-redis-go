@@ -47,9 +47,8 @@ func (s *Server) Start() {
 		_ = listener.Close()
 	}(listener)
 
-	core.InitMyRedis(s.CacheFolder, config.CacheFileName)
-	readCache(s.CacheFolder, config.CacheFileName)
-	fmt.Println("Server started...", s.Addr)
+	core.InitMyRedis()
+	readCache(core.GetMyRedis(), s.CacheFolder)
 
 	go func() {
 		stop := <-s.stopSignal

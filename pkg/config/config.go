@@ -7,6 +7,5 @@ const (
 	ClientPrivateKeyFile = "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/ssl/client/client.key"
 	ConnectionHost       = "localhost"
 	ConnectionPort       = "6973"
-	CacheFolder          = "/Users/chantapat.t/GolandProjects/mini-redis-go"
-	CacheFileName        = "cache.txt"
+	CacheFolder          = "/Users/chantapat.t/GolandProjects/mini-redis-go/cache"
 )

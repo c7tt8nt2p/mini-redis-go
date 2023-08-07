@@ -19,23 +19,24 @@ func setCmdHandler(conn *net.Conn, server *Server, message string) error {
 	k, v := extractSetCli(message)
 	myRedis := core.GetMyRedis()
 
-	if myRedis.ExistsByKey(k) {
-		myRedis.Set(k, v)
-		cacheRewriteAll(&myRedis, server.CacheFolder)
+	err := cacheAsFile(server.CacheFolder, k, v)
+	if err != nil {
+		_, _ = (*conn).Write([]byte("Set failed" + "\n"))
+		return err
 	} else {
+		_, _ = (*conn).Write([]byte("Set ok" + "\n"))
 		myRedis.Set(k, v)
-		cacheAppend(server.CacheFolder, k, v)
+		return nil
 	}
-	_, err := (*conn).Write([]byte("Set ok" + "\n"))
-	return err
 }
 
 func getCmdHandler(conn *net.Conn, message string) error {
 	k := extractGetCli(message)
 	myRedis := core.GetMyRedis()
 	v := myRedis.Get(k)
+	fmt.Println("		xxxx", v)
 
-	_, err := (*conn).Write([]byte(v + "\n"))
+	_, err := (*conn).Write(append(v, []byte("\n")...))
 	return err
 }
 
