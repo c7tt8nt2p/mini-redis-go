@@ -5,18 +5,18 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"log"
 	"mini-redis-go/pkg/config"
 	"mini-redis-go/pkg/core"
 	"net"
-	"os"
 )
 
 type MiniRedisServer interface {
-	Start() *net.Listener
+	Start()
 }
 
 type Server struct {
-	Listener    *net.Listener
+	listener    *net.Listener
 	Addr        string
 	CacheFolder string
 	stopSignal  chan bool
@@ -40,18 +40,14 @@ func (s *Server) Start() {
 	}
 	listener, err := tls.Listen("tcp", s.Addr, tlsConfig)
 	if err != nil {
-		fmt.Println("Error when initialize a connection:", err.Error())
-		os.Exit(1)
+		log.Panic("Error when initialize a connection: ", err)
 	}
-	s.Listener = &listener
-	//defer func(listener net.Listener) {
-	//	err := listener.Close()
-	//	if err != nil {
-	//		fmt.Println("Error when closing a listener:", err.Error())
-	//	}
-	//}(listener)
+	s.listener = &listener
+	defer func(listener net.Listener) {
+		_ = listener.Close()
+	}(listener)
 
-	core.InitOnce(s.CacheFolder, config.CacheFileName)
+	core.InitMyRedis(s.CacheFolder, config.CacheFileName)
 	readCache(s.CacheFolder, config.CacheFileName)
 	fmt.Println("Server started...", s.Addr)
 
@@ -59,7 +55,7 @@ func (s *Server) Start() {
 		stop := <-s.stopSignal
 		if stop {
 			fmt.Println("Stopping the server...")
-			_ = (*s.Listener).Close()
+			_ = (*s.listener).Close()
 		}
 	}()
 
@@ -69,7 +65,7 @@ func (s *Server) Start() {
 		if err != nil {
 			break
 		}
-		go handleConnection(*s, *conn)
+		go handleConnection(s, conn)
 	}
 
 }
@@ -81,7 +77,7 @@ func (s *Server) Stop() {
 func loadCert() *tls.Certificate {
 	cert, err := tls.LoadX509KeyPair(config.PublicKeyFile, config.PrivateKeyFile)
 	if err != nil {
-		panic(fmt.Sprintf("Error loading certificate: %s", err))
+		log.Fatal("error loading certificate: ", err)
 	}
 	return &cert
 }
@@ -95,72 +91,60 @@ func acceptANewConnection(listener *net.Listener) (*net.Conn, error) {
 	return &conn, nil
 }
 
-func handleConnection(s Server, conn net.Conn) {
+func handleConnection(server *Server, conn *net.Conn) {
 	defer func(connection net.Conn) {
 		err := connection.Close()
 		if err != nil {
-			fmt.Println("Error when closing a connection:", err.Error())
+			log.Println("Error when closing a connection: ", err.Error())
 		}
-	}(conn)
+	}(*conn)
 
-	reader := bufio.NewReader(conn)
+	reader := bufio.NewReader(*conn)
 	for {
-		message, err := reader.ReadString('\n')
+		message, err := readMessage(reader, conn)
 		if err != nil {
-			if err == io.EOF || err == io.ErrUnexpectedEOF {
-				fmt.Println("Goodbye", conn.RemoteAddr())
-			} else {
-				fmt.Println("Error reading:", err.Error())
-			}
 			break
 		}
 
 		cmdType := parse(message)
+
 		switch cmdType {
 		case exitCmd:
-			fmt.Println("Bye", conn.RemoteAddr())
-			break
+			exitCmdHandler((*conn).RemoteAddr().String())
 		case pingCmd:
-			_, err = conn.Write([]byte("PONG\n"))
-			if err != nil {
-				fmt.Println("Error sending response to pingCmd:", err)
-				break
+			if err := pingCmdHandler(conn); err != nil {
+				log.Println("error sending response to pingCmd: ", err)
 			}
-			continue
 		case setCmd:
-			k, v := extractSetCli(message)
-			myRedis := core.GetMyRedis()
-
-			if myRedis.Exists(k) {
-				myRedis.Set(k, v)
-				cacheRewrite(&myRedis, s.CacheFolder)
-			} else {
-				myRedis.Set(k, v)
-				cacheAppend(s.CacheFolder, k, v)
-			}
-			_, err = conn.Write([]byte("Set ok" + "\n"))
+			err := setCmdHandler(conn, server, message)
 			if err != nil {
-				fmt.Println("Error sending response to setCmd:", err)
-				_ = conn.Close()
+				log.Println("error sending response to setCmd: ", err)
+				_ = (*conn).Close()
 			}
 		case getCmd:
-			k := extractGetCli(message)
-			myRedis := core.GetMyRedis()
-			v := myRedis.Get(k)
-
-			_, err = conn.Write([]byte(v + "\n"))
+			err := getCmdHandler(conn, message)
 			if err != nil {
-				fmt.Println("Error sending response to getCmd:", err)
-				break
+				log.Println("Error sending response to getCmd: ", err)
 			}
 		case otherCmd:
-			_, err = conn.Write([]byte(message + "\n"))
+			err := otherCmdHandler(conn, message)
 			if err != nil {
-				fmt.Println("Error sending response to otherCmd:", err)
-				break
+				log.Println("Error sending response to otherCmd: ", err)
 			}
-
 		}
-		fmt.Print("\t", conn.RemoteAddr().String()+" : ", message)
+		fmt.Print("\t", (*conn).RemoteAddr().String()+" : ", message)
 	}
+}
+
+func readMessage(reader *bufio.Reader, conn *net.Conn) (string, error) {
+	message, err := reader.ReadString('\n')
+	if err != nil {
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			fmt.Println("goodbye", (*conn).RemoteAddr())
+		} else {
+			fmt.Println("error reading:", err.Error())
+		}
+		return "", err
+	}
+	return message, nil
 }

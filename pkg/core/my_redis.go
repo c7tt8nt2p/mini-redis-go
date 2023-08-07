@@ -9,7 +9,7 @@ type Redis interface {
 	Get(key string) string
 	Set(key string, value string)
 	Db() map[string][]byte
-	Exists(key string) bool
+	ExistsByKey(key string) bool
 }
 
 type myRedis struct {
@@ -35,7 +35,7 @@ var mutex = &sync.Mutex{}
 //	return instance
 //}
 
-func InitOnce(cacheFolder, cacheFileName string) {
+func InitMyRedis(cacheFolder, cacheFileName string) {
 	if instance == nil {
 		mutex.Lock()
 		defer mutex.Unlock()
@@ -71,7 +71,7 @@ func (c *myRedis) Db() map[string][]byte {
 	return c.db.cache
 }
 
-func (c *myRedis) Exists(key string) bool {
+func (c *myRedis) ExistsByKey(key string) bool {
 	_, exists := c.db.cache[key]
 	return exists
 }

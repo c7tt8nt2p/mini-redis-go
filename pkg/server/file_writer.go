@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func cacheRewrite(myRedis *core.Redis, cacheFolder string) {
+func cacheRewriteAll(myRedis *core.Redis, cacheFolder string) {
 	f, err := os.OpenFile(filepath.Join(cacheFolder, config.CacheFileName), os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Println(err)
