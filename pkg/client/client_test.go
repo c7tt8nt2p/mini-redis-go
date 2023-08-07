@@ -41,9 +41,9 @@ func write(t *testing.T, conn *tls.Conn, s string) {
 
 func read(t *testing.T, conn *tls.Conn) string {
 	buf := make([]byte, 1024)
-	n, err2 := (*conn).Read(buf)
-	if err2 != nil {
-		t.Error("Error reading response", err2)
+	n, err := (*conn).Read(buf)
+	if err != nil {
+		t.Error("Error reading response", err)
 	}
 	return string(buf[:n])
 }

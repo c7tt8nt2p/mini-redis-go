@@ -48,15 +48,15 @@ func isSetCli(s string) bool {
 	return matches
 }
 
-func extractSetCli(s string) (string, []byte) {
+func extractSetCli(s string) (string, string) {
 	message := strings.TrimSpace(s)
 	rgx := regexp.MustCompile(setCliRegex)
 	rs := rgx.FindStringSubmatch(message)
 
 	if len(rs) == 3 {
-		return rs[1], []byte(rs[2])
+		return rs[1], rs[2]
 	}
-	return "", nil
+	return "", ""
 }
 
 func isGetCli(s string) bool {

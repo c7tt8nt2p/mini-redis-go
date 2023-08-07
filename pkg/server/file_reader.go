@@ -40,7 +40,7 @@ func readCacheFile(myRedis core.Redis, k, cacheFilePath string) error {
 	if err != nil {
 		return err
 	}
-	myRedis.Set(k, data)
+	myRedis.SetByteArray(k, data)
 
 	return nil
 }

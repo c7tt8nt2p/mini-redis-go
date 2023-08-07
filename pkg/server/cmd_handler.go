@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"mini-redis-go/pkg/core"
+	"mini-redis-go/pkg/server/conversion"
 	"net"
 )
 
@@ -19,13 +20,14 @@ func setCmdHandler(conn *net.Conn, server *Server, message string) error {
 	k, v := extractSetCli(message)
 	myRedis := core.GetMyRedis()
 
-	err := cacheAsFile(server.CacheFolder, k, v)
+	vv, _ := conversion.ToByteArray(v)
+	err := cacheAsFile(server.CacheFolder, k, vv)
 	if err != nil {
 		_, _ = (*conn).Write([]byte("Set failed" + "\n"))
 		return err
 	} else {
 		_, _ = (*conn).Write([]byte("Set ok" + "\n"))
-		myRedis.Set(k, v)
+		myRedis.SetString(k, v)
 		return nil
 	}
 }
