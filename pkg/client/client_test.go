@@ -89,7 +89,7 @@ func TestCache(t *testing.T) {
 		_ = os.RemoveAll(path)
 	}(tempFolder)
 	fmt.Println("tempFolder", tempFolder)
-	createCacheFileWithData(tempFolder, "testKey", "tesValue")
+	createCacheFileWithData(tempFolder, "testKey", []byte("tesValue"))
 	s := startServer(config.ConnectionHost, config.ConnectionPort, tempFolder)
 	conn := connectToServer(config.ConnectionHost, config.ConnectionPort)
 
@@ -100,10 +100,11 @@ func TestCache(t *testing.T) {
 	s.Stop()
 }
 
-func createCacheFileWithData(folder, k, v string) {
-	file, _ := os.OpenFile(filepath.Join(folder, config.CacheFileName), os.O_CREATE|os.O_WRONLY, 0644)
+func createCacheFileWithData(folder string, k string, v []byte) {
+	file, _ := os.OpenFile(filepath.Join(folder, k), os.O_CREATE|os.O_WRONLY, 0644)
 	defer func(file *os.File) {
 		_ = file.Close()
 	}(file)
-	_, _ = file.WriteString(fmt.Sprintf("%s=%s\n", k, v))
+
+	_, _ = file.Write(v)
 }
