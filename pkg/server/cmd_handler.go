@@ -34,7 +34,6 @@ func getCmdHandler(conn *net.Conn, message string) error {
 	k := extractGetCli(message)
 	myRedis := core.GetMyRedis()
 	v := myRedis.Get(k)
-	fmt.Println("		xxxx", v)
 
 	_, err := (*conn).Write(append(v, []byte("\n")...))
 	return err

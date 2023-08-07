@@ -22,7 +22,7 @@ type Server struct {
 	stopSignal  chan bool
 }
 
-func NewServer(host, port, cacheFolder string) *Server {
+func NewServer(host, port, cacheFolder string) MiniRedisServer {
 	s := Server{
 		Addr:        host + ":" + port,
 		CacheFolder: cacheFolder,
@@ -47,6 +47,10 @@ func (s *Server) Start() {
 		_ = listener.Close()
 	}(listener)
 
+	s.listen(listener)
+}
+
+func (s *Server) listen(listener net.Listener) {
 	core.InitMyRedis()
 	readCache(core.GetMyRedis(), s.CacheFolder)
 
@@ -66,7 +70,6 @@ func (s *Server) Start() {
 		}
 		go handleConnection(s, conn)
 	}
-
 }
 
 func (s *Server) Stop() {
@@ -86,7 +89,7 @@ func acceptANewConnection(listener *net.Listener) (*net.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Incoming connection from:", conn.RemoteAddr())
+	log.Println("incoming connection from: ", conn.RemoteAddr())
 	return &conn, nil
 }
 
@@ -94,7 +97,7 @@ func handleConnection(server *Server, conn *net.Conn) {
 	defer func(connection net.Conn) {
 		err := connection.Close()
 		if err != nil {
-			log.Println("Error when closing a connection: ", err.Error())
+			log.Println("error when closing a connection: ", err.Error())
 		}
 	}(*conn)
 
@@ -141,7 +144,7 @@ func readMessage(reader *bufio.Reader, conn *net.Conn) (string, error) {
 		if err == io.EOF || err == io.ErrUnexpectedEOF {
 			fmt.Println("goodbye", (*conn).RemoteAddr())
 		} else {
-			fmt.Println("error reading:", err.Error())
+			fmt.Println("error reading message from client:", err.Error())
 		}
 		return "", err
 	}

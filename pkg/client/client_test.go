@@ -47,7 +47,6 @@ func read(t *testing.T, conn *tls.Conn) string {
 	}
 	return string(buf[:n])
 }
-
 func TestPingPong(t *testing.T) {
 	tempFolder := createTempFolder()
 	defer func(path string) {
