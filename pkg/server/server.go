@@ -13,6 +13,7 @@ import (
 
 type MiniRedisServer interface {
 	Start()
+	Stop()
 }
 
 type Server struct {

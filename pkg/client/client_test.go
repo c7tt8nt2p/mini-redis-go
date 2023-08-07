@@ -21,7 +21,7 @@ func createTempFolder() string {
 	return folder
 }
 
-func startServer(host, port, cacheFolder string) *server.Server {
+func startServer(host, port, cacheFolder string) server.MiniRedisServer {
 	s := server.NewServer(host, port, cacheFolder)
 	go s.Start()
 	return s
