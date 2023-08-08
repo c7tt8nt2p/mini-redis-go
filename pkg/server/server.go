@@ -61,7 +61,7 @@ func (s *Server) listen(listener net.Listener) {
 
 	readCache(redis.GetMyRedis(), s.CacheFolder)
 	log.Println("================================================================================================")
-	log.Println("Server is ready...")
+	log.Println("server is ready...")
 	go func() {
 		stop := <-s.stopSignal
 		if stop {
@@ -116,38 +116,57 @@ func handleConnection(server *Server, conn *net.Conn) {
 			break
 		}
 
-		cmdType := parse(message)
-
-		switch cmdType {
-		case exitCmd:
-			exitCmdHandler((*conn).RemoteAddr().String())
-		case pingCmd:
-			if err := pingCmdHandler(conn); err != nil {
-				log.Println("error sending response to pingCmd: ", err)
-			}
-		case setCmd:
-			err := setCmdHandler(conn, server, message)
-			if err != nil {
-				log.Println("error sending response to setCmd: ", err)
-				_ = (*conn).Close()
-			}
-		case getCmd:
-			err := getCmdHandler(conn, message)
-			if err != nil {
-				log.Println("Error sending response to getCmd: ", err)
-			}
-		case subscribeCmd:
-			err := subscribeCmdHandler(conn, message)
-			if err != nil {
-				log.Println("Error subscribing response to getCmd: ", err)
-			}
-		case otherCmd:
-			err := otherCmdHandler(conn, message)
-			if err != nil {
-				log.Println("Error sending response to otherCmd: ", err)
-			}
+		subscriptionConnection := broker.GetMyBroker().IsSubscriptionConnection(conn)
+		if subscriptionConnection {
+			handleSubscriptionConnection(conn, message)
+		} else {
+			handleNonSubscriptionConnection(server, conn, message)
+			fmt.Printf("\t[%s]: %s", (*conn).RemoteAddr().String(), message)
 		}
-		fmt.Print("\t", (*conn).RemoteAddr().String()+" : ", message)
+	}
+}
+
+func handleSubscriptionConnection(conn *net.Conn, message string) {
+	cmdType := parseSubscriptionCommand(message)
+	switch cmdType {
+	case unsubscribeCmd:
+		unsubscribeCmdHandler(conn)
+	case publishCmd:
+		publishCmdHandler(conn, message)
+	}
+}
+
+func handleNonSubscriptionConnection(server *Server, conn *net.Conn, message string) {
+	cmdType := parseNonSubscriptionCommand(message)
+
+	switch cmdType {
+	case exitCmd:
+		exitCmdHandler((*conn).RemoteAddr().String())
+	case pingCmd:
+		if err := pingCmdHandler(conn); err != nil {
+			log.Println("error sending response to pingCmd: ", err)
+		}
+	case setCmd:
+		err := setCmdHandler(conn, server, message)
+		if err != nil {
+			log.Println("error sending response to setCmd: ", err)
+			_ = (*conn).Close()
+		}
+	case getCmd:
+		err := getCmdHandler(conn, message)
+		if err != nil {
+			log.Println("Error sending response to getCmd: ", err)
+		}
+	case subscribeCmd:
+		err := subscribeCmdHandler(conn, message)
+		if err != nil {
+			log.Println("Error subscribing response to getCmd: ", err)
+		}
+	case otherCmd:
+		err := otherCmdHandler(conn, message)
+		if err != nil {
+			log.Println("Error sending response to otherCmd: ", err)
+		}
 	}
 }
 
@@ -156,7 +175,7 @@ func readMessage(reader *bufio.Reader, conn *net.Conn) (string, error) {
 	if err != nil {
 		if err == io.EOF || err == io.ErrUnexpectedEOF {
 			b := broker.GetMyBroker()
-			b.Disconnect(conn)
+			b.Unsubscribe(conn)
 			fmt.Println("goodbye", (*conn).RemoteAddr())
 		} else {
 			fmt.Println("error reading message from client:", err.Error())

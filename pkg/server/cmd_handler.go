@@ -18,7 +18,7 @@ func pingCmdHandler(conn *net.Conn) error {
 }
 
 func setCmdHandler(conn *net.Conn, server *Server, message string) error {
-	k, v := extractSetCli(message)
+	k, v := extractSetCmd(message)
 	myRedis := redis.GetMyRedis()
 
 	ba, _ := conversion.ToByteArray(v)
@@ -35,7 +35,7 @@ func setCmdHandler(conn *net.Conn, server *Server, message string) error {
 }
 
 func getCmdHandler(conn *net.Conn, message string) error {
-	k := extractGetCli(message)
+	k := extractGetCmd(message)
 	myRedis := redis.GetMyRedis()
 	v := myRedis.Get(k)
 
@@ -44,7 +44,7 @@ func getCmdHandler(conn *net.Conn, message string) error {
 }
 
 func subscribeCmdHandler(conn *net.Conn, message string) error {
-	topic := extractSubscribeCli(message)
+	topic := extractSubscribeCmd(message)
 	b := broker.GetMyBroker()
 	b.Subscribe(conn, topic)
 
@@ -61,4 +61,16 @@ func appendByteTypeToFront(originalByteArray []byte, byteType redis.ByteType) []
 	bt := byte(byteType)
 	newByteArray := append([]byte{bt}, originalByteArray...)
 	return newByteArray
+}
+
+func unsubscribeCmdHandler(conn *net.Conn) {
+	broker.GetMyBroker().Unsubscribe(conn)
+}
+
+func publishCmdHandler(conn *net.Conn, message string) {
+	b := broker.GetMyBroker()
+	exists, topic := b.GetTopicFromConnection(conn)
+	if exists {
+		b.Publish(conn, topic, message)
+	}
 }

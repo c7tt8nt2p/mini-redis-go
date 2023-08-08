@@ -5,10 +5,11 @@ import (
 	"strings"
 )
 
-type CmdType uint
+type NonSubscriptionCmdType uint
+type SubscriptionCmdType uint
 
 const (
-	exitCmd CmdType = iota
+	exitCmd NonSubscriptionCmdType = iota
 	pingCmd
 	setCmd
 	getCmd
@@ -16,25 +17,42 @@ const (
 	otherCmd
 )
 
-const setCliRegex = `^set ([a-zA-Z0-9]+) ([a-zA-Z0-9]+)$`
-const getCliRegex = `^get ([a-zA-Z0-9]+)$`
-const subscribeCliRegex = `^subscribe ([a-zA-Z0-9]+)$`
+const (
+	unsubscribeCmd SubscriptionCmdType = iota
+	publishCmd
+)
 
-func parse(s string) CmdType {
+const unsubscribeCmdRegex = `^unsubscribe$`
+
+const setCmdRegex = `^set ([a-zA-Z0-9]+) ([a-zA-Z0-9]+)$`
+const getCmdRegex = `^get ([a-zA-Z0-9]+)$`
+const subscribeCmdRegex = `^subscribe ([a-zA-Z0-9]+)$`
+
+func parseNonSubscriptionCommand(s string) NonSubscriptionCmdType {
 	text := strings.ToLower(strings.TrimSpace(s))
 
 	if isExit(text) {
 		return exitCmd
 	} else if isPing(text) {
 		return pingCmd
-	} else if isSetCli(text) {
+	} else if isSetCmd(text) {
 		return setCmd
-	} else if isGetCli(text) {
+	} else if isGetCmd(text) {
 		return getCmd
-	} else if isSubscribeCli(text) {
+	} else if isSubscribeCmd(text) {
 		return subscribeCmd
 	} else {
 		return otherCmd
+	}
+}
+
+func parseSubscriptionCommand(s string) SubscriptionCmdType {
+	text := strings.ToLower(strings.TrimSpace(s))
+
+	if isUnsubscribeCmd(text) {
+		return unsubscribeCmd
+	} else {
+		return publishCmd
 	}
 }
 
@@ -42,19 +60,25 @@ func isExit(s string) bool {
 	return s == "exit"
 }
 
-func isPing(s string) bool {
-	return s == "ping"
-}
-
-func isSetCli(s string) bool {
+func isUnsubscribeCmd(s string) bool {
 	message := strings.TrimSpace(s)
-	matches, _ := regexp.MatchString(setCliRegex, message)
+	matches, _ := regexp.MatchString(unsubscribeCmdRegex, message)
 	return matches
 }
 
-func extractSetCli(s string) (string, string) {
+func isPing(s string) bool {
+	return strings.TrimSpace(s) == "ping"
+}
+
+func isSetCmd(s string) bool {
 	message := strings.TrimSpace(s)
-	rgx := regexp.MustCompile(setCliRegex)
+	matches, _ := regexp.MatchString(setCmdRegex, message)
+	return matches
+}
+
+func extractSetCmd(s string) (string, string) {
+	message := strings.TrimSpace(s)
+	rgx := regexp.MustCompile(setCmdRegex)
 	rs := rgx.FindStringSubmatch(message)
 
 	if len(rs) == 3 {
@@ -63,15 +87,15 @@ func extractSetCli(s string) (string, string) {
 	return "", ""
 }
 
-func isGetCli(s string) bool {
+func isGetCmd(s string) bool {
 	message := strings.TrimSpace(s)
-	matches, _ := regexp.MatchString(getCliRegex, message)
+	matches, _ := regexp.MatchString(getCmdRegex, message)
 	return matches
 }
 
-func extractGetCli(s string) string {
+func extractGetCmd(s string) string {
 	message := strings.TrimSpace(s)
-	rgx := regexp.MustCompile(getCliRegex)
+	rgx := regexp.MustCompile(getCmdRegex)
 	rs := rgx.FindStringSubmatch(message)
 
 	if len(rs) == 2 {
@@ -80,15 +104,15 @@ func extractGetCli(s string) string {
 	return ""
 }
 
-func isSubscribeCli(s string) bool {
+func isSubscribeCmd(s string) bool {
 	message := strings.TrimSpace(s)
-	matches, _ := regexp.MatchString(subscribeCliRegex, message)
+	matches, _ := regexp.MatchString(subscribeCmdRegex, message)
 	return matches
 }
 
-func extractSubscribeCli(s string) string {
+func extractSubscribeCmd(s string) string {
 	message := strings.TrimSpace(s)
-	rgx := regexp.MustCompile(subscribeCliRegex)
+	rgx := regexp.MustCompile(subscribeCmdRegex)
 	rs := rgx.FindStringSubmatch(message)
 
 	if len(rs) == 2 {
