@@ -5,18 +5,21 @@ import (
 	"crypto/tls"
 	"fmt"
 	"mini-redis-go/pkg/config"
-	"net"
+	"mini-redis-go/pkg/utils"
 	"os"
 )
 
 type MiniRedisClient interface {
-	Connect() *net.Conn
+	Connect() *tls.Conn
+	Subscribe(topic string) MiniRedisSubscriber
+	Publish(s string)
 }
 
 type Client struct {
 	addr           string
 	publicKeyFile  string
 	privateKeyFile string
+	conn           *tls.Conn
 }
 
 func NewClient(host, port, publicKeyFile, privateKeyFile string) *Client {
@@ -38,7 +41,20 @@ func (c *Client) Connect() *tls.Conn {
 		fmt.Println("Error when connecting to a server:", err.Error())
 		os.Exit(1)
 	}
+	c.conn = conn
 	return conn
+}
+
+func (c *Client) Subscribe(topic string) MiniRedisSubscriber {
+	msg := fmt.Sprintf("SUBSCRIBE %s\n", topic)
+	utils.WriteToServer(c.conn, msg)
+
+	return Subscriber{}
+}
+
+func (c *Client) Publish(s string) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func loadCert() *tls.Certificate {

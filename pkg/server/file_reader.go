@@ -1,15 +1,14 @@
 package server
 
 import (
-	"fmt"
 	"log"
-	"mini-redis-go/pkg/core"
+	"mini-redis-go/pkg/core/redis"
 	"os"
 	"path/filepath"
 )
 
-func readCache(myRedis core.Redis, cacheFolder string) {
-	fmt.Println("Reading cache... from", cacheFolder)
+func readCache(myRedis redis.Redis, cacheFolder string) {
+	log.Println("reading cache... from", cacheFolder)
 
 	err := filepath.Walk(cacheFolder, func(path string, fileInfo os.FileInfo, err error) error {
 		if err != nil {
@@ -23,11 +22,11 @@ func readCache(myRedis core.Redis, cacheFolder string) {
 	if err != nil {
 		log.Panic("error reading cache: ", err)
 	}
-	fmt.Println("Reading cache... done")
+	log.Println("reading cache... done")
 }
 
-func readCacheFile(myRedis core.Redis, k, cacheFilePath string) error {
-	fmt.Println("	Uncache:", cacheFilePath)
+func readCacheFile(myRedis redis.Redis, k, cacheFilePath string) error {
+	log.Println("	uncache:", cacheFilePath)
 	file, err := os.Open(cacheFilePath)
 	if err != nil {
 		return err
@@ -45,13 +44,13 @@ func readCacheFile(myRedis core.Redis, k, cacheFilePath string) error {
 	return nil
 }
 
-func getByteTypeAndValue(originalByteArray []byte) (core.ByteType, []byte) {
+func getByteTypeAndValue(originalByteArray []byte) (redis.ByteType, []byte) {
 	firstByte := originalByteArray[0]
-	if firstByte == uint8(core.StringByteType) {
-		return core.StringByteType, originalByteArray[1:]
-	} else if firstByte == uint8(core.IntByteType) {
-		return core.IntByteType, originalByteArray[1:]
+	if firstByte == uint8(redis.StringByteType) {
+		return redis.StringByteType, originalByteArray[1:]
+	} else if firstByte == uint8(redis.IntByteType) {
+		return redis.IntByteType, originalByteArray[1:]
 	} else {
-		return core.Unknown, nil
+		return redis.Unknown, nil
 	}
 }

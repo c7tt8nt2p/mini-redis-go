@@ -7,7 +7,8 @@ import (
 	"io"
 	"log"
 	"mini-redis-go/pkg/config"
-	"mini-redis-go/pkg/core"
+	"mini-redis-go/pkg/core/broker"
+	"mini-redis-go/pkg/core/redis"
 	"net"
 )
 
@@ -52,9 +53,15 @@ func (s *Server) Start() {
 }
 
 func (s *Server) listen(listener net.Listener) {
-	core.InitMyRedis()
-	readCache(core.GetMyRedis(), s.CacheFolder)
+	log.Println("================================================================================================")
+	log.Println("initializing redis...")
+	redis.InitMyRedis()
+	log.Println("initializing broker...")
+	broker.InitMyBroker()
 
+	readCache(redis.GetMyRedis(), s.CacheFolder)
+	log.Println("================================================================================================")
+	log.Println("Server is ready...")
 	go func() {
 		stop := <-s.stopSignal
 		if stop {
@@ -129,6 +136,11 @@ func handleConnection(server *Server, conn *net.Conn) {
 			if err != nil {
 				log.Println("Error sending response to getCmd: ", err)
 			}
+		case subscribeCmd:
+			err := subscribeCmdHandler(conn, message)
+			if err != nil {
+				log.Println("Error subscribing response to getCmd: ", err)
+			}
 		case otherCmd:
 			err := otherCmdHandler(conn, message)
 			if err != nil {
@@ -143,6 +155,8 @@ func readMessage(reader *bufio.Reader, conn *net.Conn) (string, error) {
 	message, err := reader.ReadString('\n')
 	if err != nil {
 		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			b := broker.GetMyBroker()
+			b.Disconnect(conn)
 			fmt.Println("goodbye", (*conn).RemoteAddr())
 		} else {
 			fmt.Println("error reading message from client:", err.Error())

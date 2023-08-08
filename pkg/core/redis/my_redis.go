@@ -1,4 +1,4 @@
-package core
+package redis
 
 import (
 	"mini-redis-go/pkg/server/conversion"

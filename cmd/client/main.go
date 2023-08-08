@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"mini-redis-go/pkg/client"
 	"mini-redis-go/pkg/config"
+	"mini-redis-go/pkg/utils"
 	"os"
 	"strings"
 )
@@ -24,11 +25,11 @@ func main() {
 	handleMessagesFromClient(conn)
 }
 
-func handleMessagesFromServer(connection *tls.Conn) {
+func handleMessagesFromServer(conn *tls.Conn) {
 	buffer := make([]byte, 1024)
 
 	for {
-		n, err := (*connection).Read(buffer)
+		n, err := (*conn).Read(buffer)
 		if err != nil {
 			fmt.Println("Error reading server response:", err)
 			break
@@ -39,7 +40,7 @@ func handleMessagesFromServer(connection *tls.Conn) {
 	}
 }
 
-func handleMessagesFromClient(connection *tls.Conn) {
+func handleMessagesFromClient(conn *tls.Conn) {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		message, err := reader.ReadString('\n')
@@ -52,11 +53,7 @@ func handleMessagesFromClient(connection *tls.Conn) {
 				fmt.Println("Disconnected.")
 				break
 			}
-			_, err := (*connection).Write([]byte(message))
-			if err != nil {
-				fmt.Println("Error sending message to server:", err.Error())
-				os.Exit(1)
-			}
+			utils.WriteToServer(conn, message)
 		}
 	}
 }

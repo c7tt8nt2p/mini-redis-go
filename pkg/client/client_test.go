@@ -16,7 +16,7 @@ import (
 func createTempFolder() string {
 	folder, err := os.MkdirTemp("", "mini-redis")
 	if err != nil {
-		log.Fatal("Error creating temp folder", err)
+		log.Fatal("error creating temp folder", err)
 	}
 	return folder
 }
