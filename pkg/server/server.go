@@ -174,8 +174,7 @@ func readMessage(reader *bufio.Reader, conn *net.Conn) (string, error) {
 	message, err := reader.ReadString('\n')
 	if err != nil {
 		if err == io.EOF || err == io.ErrUnexpectedEOF {
-			b := broker.GetMyBroker()
-			b.Unsubscribe(conn)
+			unsubscribeCmdHandler(conn)
 			fmt.Println("goodbye", (*conn).RemoteAddr())
 		} else {
 			fmt.Println("error reading message from client:", err.Error())

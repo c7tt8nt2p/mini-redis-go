@@ -48,6 +48,9 @@ func subscribeCmdHandler(conn *net.Conn, message string) error {
 	b := broker.GetMyBroker()
 	b.Subscribe(conn, topic)
 
+	joinedMsg := fmt.Sprintf("%s has joined us", (*conn).RemoteAddr())
+	b.Publish(conn, topic, joinedMsg)
+
 	_, err := (*conn).Write([]byte("Subscribed\n"))
 	return err
 }
@@ -64,12 +67,20 @@ func appendByteTypeToFront(originalByteArray []byte, byteType redis.ByteType) []
 }
 
 func unsubscribeCmdHandler(conn *net.Conn) {
-	broker.GetMyBroker().Unsubscribe(conn)
+	b := broker.GetMyBroker()
+
+	topic, exists := b.GetTopicFromConnection(conn)
+	if exists {
+		b.Unsubscribe(conn)
+
+		leftMsg := fmt.Sprintf("%s has left", (*conn).RemoteAddr())
+		b.Publish(conn, topic, leftMsg)
+	}
 }
 
 func publishCmdHandler(conn *net.Conn, message string) {
 	b := broker.GetMyBroker()
-	exists, topic := b.GetTopicFromConnection(conn)
+	topic, exists := b.GetTopicFromConnection(conn)
 	if exists {
 		b.Publish(conn, topic, message)
 	}

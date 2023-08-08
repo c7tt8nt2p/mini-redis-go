@@ -84,9 +84,9 @@ func removeConnection(conns []*net.Conn, conn *net.Conn) []*net.Conn {
 	return conns
 }
 
-func (m *MyBroker) GetTopicFromConnection(conn *net.Conn) (bool, string) {
+func (m *MyBroker) GetTopicFromConnection(conn *net.Conn) (string, bool) {
 	topic, exists := m.clients[conn]
-	return exists, topic
+	return topic, exists
 }
 
 func (m *MyBroker) Publish(conn *net.Conn, topic string, message string) {
