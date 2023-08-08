@@ -5,6 +5,15 @@ import (
 	"sync"
 )
 
+type ByteType uint8
+
+const (
+	Unknown ByteType = iota
+	StringByteType
+	IntByteType
+	StructByteType
+)
+
 type Redis interface {
 	Get(key string) []byte
 	SetByteArray(key string, value []byte)

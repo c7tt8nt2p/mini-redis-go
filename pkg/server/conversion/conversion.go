@@ -7,7 +7,7 @@ import (
 )
 
 type MyRedisValueType interface {
-	~[]byte | ~int | ~string | ~struct{}
+	~[]byte | ~int | ~string | struct{}
 }
 
 // ToByteArray Convert a given value to byte array

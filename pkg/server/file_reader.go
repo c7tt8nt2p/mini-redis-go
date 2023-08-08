@@ -40,7 +40,18 @@ func readCacheFile(myRedis core.Redis, k, cacheFilePath string) error {
 	if err != nil {
 		return err
 	}
-	myRedis.SetByteArray(k, data)
-
+	_, realData := getByteTypeAndValue(data)
+	myRedis.SetByteArray(k, realData)
 	return nil
+}
+
+func getByteTypeAndValue(originalByteArray []byte) (core.ByteType, []byte) {
+	firstByte := originalByteArray[0]
+	if firstByte == uint8(core.StringByteType) {
+		return core.StringByteType, originalByteArray[1:]
+	} else if firstByte == uint8(core.IntByteType) {
+		return core.IntByteType, originalByteArray[1:]
+	} else {
+		return core.Unknown, nil
+	}
 }

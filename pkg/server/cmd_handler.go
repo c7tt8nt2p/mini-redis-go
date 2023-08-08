@@ -20,8 +20,9 @@ func setCmdHandler(conn *net.Conn, server *Server, message string) error {
 	k, v := extractSetCli(message)
 	myRedis := core.GetMyRedis()
 
-	vv, _ := conversion.ToByteArray(v)
-	err := cacheAsFile(server.CacheFolder, k, vv)
+	ba, _ := conversion.ToByteArray(v)
+	appendedBa := appendByteTypeToFront(ba, core.StringByteType)
+	err := cacheAsFile(server.CacheFolder, k, appendedBa)
 	if err != nil {
 		_, _ = (*conn).Write([]byte("Set failed" + "\n"))
 		return err
@@ -44,4 +45,10 @@ func getCmdHandler(conn *net.Conn, message string) error {
 func otherCmdHandler(conn *net.Conn, message string) error {
 	_, err := (*conn).Write([]byte(message))
 	return err
+}
+
+func appendByteTypeToFront(originalByteArray []byte, byteType core.ByteType) []byte {
+	bt := byte(byteType)
+	newByteArray := append([]byte{bt}, originalByteArray...)
+	return newByteArray
 }
