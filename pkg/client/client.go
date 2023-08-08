@@ -11,6 +11,10 @@ import (
 
 type MiniRedisClient interface {
 	Connect() *tls.Conn
+	Set(k string, v string) error
+	Get(k string) (string, error)
+	Write(m []byte) error
+	Read() (string, error)
 	Subscribe(topic string) MiniRedisSubscriber
 	Publish(s string)
 }
@@ -43,6 +47,33 @@ func (c *Client) Connect() *tls.Conn {
 	}
 	c.conn = conn
 	return conn
+}
+
+func (c *Client) Set(k string, v string) error {
+	msg := fmt.Sprintf("set %s %s\n", k, v)
+	return c.Write([]byte(msg))
+}
+
+func (c *Client) Get(k string) (string, error) {
+	msg := fmt.Sprintf("get %s\n", k)
+	if err := c.Write([]byte(msg)); err != nil {
+		return "", err
+	}
+	return c.Read()
+}
+
+func (c *Client) Write(m []byte) error {
+	_, err := (*c.conn).Write(m)
+	return err
+}
+
+func (c *Client) Read() (string, error) {
+	buf := make([]byte, 1024)
+	n, err := (*c.conn).Read(buf)
+	if err != nil {
+		return "", err
+	}
+	return string(buf[:n]), nil
 }
 
 func (c *Client) Subscribe(topic string) MiniRedisSubscriber {
