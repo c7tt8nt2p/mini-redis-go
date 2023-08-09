@@ -4,19 +4,19 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"fmt"
-	"mini-redis-go/pkg/config"
-	"mini-redis-go/pkg/utils"
+	"mini-redis-go/internal/config"
+	"mini-redis-go/internal/utils"
 	"os"
 )
 
-type MiniRedisClient interface {
+type IClient interface {
 	Connect() *tls.Conn
+	GetConnection() *tls.Conn
 	Set(k string, v string) error
 	Get(k string) (string, error)
 	Write(m []byte) error
 	Read() (string, error)
-	Subscribe(topic string) MiniRedisSubscriber
-	Publish(s string)
+	Subscribe(topic string) ISubscriber
 }
 
 type Client struct {
@@ -49,6 +49,10 @@ func (c *Client) Connect() *tls.Conn {
 	return conn
 }
 
+func (c *Client) GetConnection() *tls.Conn {
+	return c.conn
+}
+
 func (c *Client) Set(k string, v string) error {
 	msg := fmt.Sprintf("set %s %s\n", k, v)
 	return c.Write([]byte(msg))
@@ -76,16 +80,13 @@ func (c *Client) Read() (string, error) {
 	return string(buf[:n]), nil
 }
 
-func (c *Client) Subscribe(topic string) MiniRedisSubscriber {
+func (c *Client) Subscribe(topic string) ISubscriber {
 	msg := fmt.Sprintf("SUBSCRIBE %s\n", topic)
 	utils.WriteToServer(c.conn, msg)
 
-	return Subscriber{}
-}
-
-func (c *Client) Publish(s string) {
-	//TODO implement me
-	panic("implement me")
+	return &Subscriber{
+		c: c,
+	}
 }
 
 func loadCert() *tls.Certificate {

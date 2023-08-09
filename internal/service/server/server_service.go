@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"mini-redis-go/pkg/config"
-	"mini-redis-go/pkg/core/broker"
-	"mini-redis-go/pkg/core/redis"
+	"mini-redis-go/internal/config"
+	"mini-redis-go/internal/core/broker"
+	"mini-redis-go/internal/core/redis"
+	"mini-redis-go/internal/service/cache"
 	"net"
 )
 
-type MiniRedisServer interface {
+type IServer interface {
 	Start()
 	Stop()
 }
@@ -24,7 +25,7 @@ type Server struct {
 	stopSignal  chan bool
 }
 
-func NewServer(host, port, cacheFolder string) MiniRedisServer {
+func NewServer(host, port, cacheFolder string) IServer {
 	s := Server{
 		Addr:        host + ":" + port,
 		CacheFolder: cacheFolder,
@@ -59,7 +60,7 @@ func (s *Server) listen(listener net.Listener) {
 	log.Println("initializing broker...")
 	broker.InitMyBroker()
 
-	readCache(redis.GetMyRedis(), s.CacheFolder)
+	cache.ReadCache(redis.GetMyRedis(), s.CacheFolder)
 	log.Println("================================================================================================")
 	log.Println("server is ready...")
 	go func() {
@@ -85,7 +86,7 @@ func (s *Server) Stop() {
 }
 
 func loadCert() *tls.Certificate {
-	cert, err := tls.LoadX509KeyPair(config.PublicKeyFile, config.PrivateKeyFile)
+	cert, err := tls.LoadX509KeyPair(config.ServerPublicKeyFile, config.ServerPrivateKeyFile)
 	if err != nil {
 		log.Fatal("error loading certificate: ", err)
 	}

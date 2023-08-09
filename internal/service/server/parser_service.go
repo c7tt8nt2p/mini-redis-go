@@ -6,7 +6,6 @@ import (
 )
 
 type NonSubscriptionCmdType uint
-type SubscriptionCmdType uint
 
 const (
 	exitCmd NonSubscriptionCmdType = iota
@@ -17,13 +16,14 @@ const (
 	otherCmd
 )
 
+type SubscriptionCmdType uint
+
 const (
 	unsubscribeCmd SubscriptionCmdType = iota
 	publishCmd
 )
 
 const unsubscribeCmdRegex = `^unsubscribe$`
-
 const setCmdRegex = `^set ([a-zA-Z0-9]+) ([a-zA-Z0-9]+)$`
 const getCmdRegex = `^get ([a-zA-Z0-9]+)$`
 const subscribeCmdRegex = `^subscribe ([a-zA-Z0-9]+)$`

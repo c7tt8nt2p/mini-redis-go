@@ -2,9 +2,10 @@ package server
 
 import (
 	"fmt"
-	"mini-redis-go/pkg/core/broker"
-	"mini-redis-go/pkg/core/redis"
-	"mini-redis-go/pkg/server/conversion"
+	"mini-redis-go/internal/core/broker"
+	"mini-redis-go/internal/core/redis"
+	"mini-redis-go/internal/service/cache"
+	"mini-redis-go/internal/utils"
 	"net"
 )
 
@@ -21,9 +22,9 @@ func setCmdHandler(conn *net.Conn, server *Server, message string) error {
 	k, v := extractSetCmd(message)
 	myRedis := redis.GetMyRedis()
 
-	ba, _ := conversion.ToByteArray(v)
+	ba, _ := utils.ToByteArray(v)
 	appendedBa := appendByteTypeToFront(ba, redis.StringByteType)
-	err := cacheAsFile(server.CacheFolder, k, appendedBa)
+	err := cache.WriteCache(server.CacheFolder, k, appendedBa)
 	if err != nil {
 		_, _ = (*conn).Write([]byte("Set failed" + "\n"))
 		return err
@@ -48,7 +49,7 @@ func subscribeCmdHandler(conn *net.Conn, message string) error {
 	b := broker.GetMyBroker()
 	b.Subscribe(conn, topic)
 
-	joinedMsg := fmt.Sprintf("%s has joined us", (*conn).RemoteAddr())
+	joinedMsg := fmt.Sprintf("%s has joined us.", (*conn).RemoteAddr())
 	b.Publish(conn, topic, joinedMsg)
 
 	_, err := (*conn).Write([]byte("Subscribed\n"))
@@ -73,7 +74,7 @@ func unsubscribeCmdHandler(conn *net.Conn) {
 	if exists {
 		b.Unsubscribe(conn)
 
-		leftMsg := fmt.Sprintf("%s has left", (*conn).RemoteAddr())
+		leftMsg := fmt.Sprintf("%s has left.", (*conn).RemoteAddr())
 		b.Publish(conn, topic, leftMsg)
 	}
 }

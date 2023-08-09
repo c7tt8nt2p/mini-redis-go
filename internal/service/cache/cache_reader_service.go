@@ -1,13 +1,13 @@
-package server
+package cache
 
 import (
 	"log"
-	"mini-redis-go/pkg/core/redis"
+	"mini-redis-go/internal/core/redis"
 	"os"
 	"path/filepath"
 )
 
-func readCache(myRedis redis.Redis, cacheFolder string) {
+func ReadCache(myRedis redis.IRedis, cacheFolder string) {
 	log.Println("reading cache... from", cacheFolder)
 
 	err := filepath.Walk(cacheFolder, func(path string, fileInfo os.FileInfo, err error) error {
@@ -15,7 +15,7 @@ func readCache(myRedis redis.Redis, cacheFolder string) {
 			return err
 		}
 		if !fileInfo.IsDir() {
-			return readCacheFile(myRedis, fileInfo.Name(), path)
+			return readCacheFromFile(myRedis, fileInfo.Name(), path)
 		}
 		return nil
 	})
@@ -25,7 +25,7 @@ func readCache(myRedis redis.Redis, cacheFolder string) {
 	log.Println("reading cache... done")
 }
 
-func readCacheFile(myRedis redis.Redis, k, cacheFilePath string) error {
+func readCacheFromFile(myRedis redis.IRedis, k, cacheFilePath string) error {
 	log.Println("	uncache:", cacheFilePath)
 	file, err := os.Open(cacheFilePath)
 	if err != nil {

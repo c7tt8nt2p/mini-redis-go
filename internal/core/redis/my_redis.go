@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"mini-redis-go/pkg/server/conversion"
+	"mini-redis-go/internal/utils"
 	"sync"
 )
 
@@ -14,7 +14,7 @@ const (
 	StructByteType
 )
 
-type Redis interface {
+type IRedis interface {
 	Get(key string) []byte
 	SetByteArray(key string, value []byte)
 	SetString(key string, value string)
@@ -33,7 +33,7 @@ var mutex = &sync.Mutex{}
 
 //var once sync.Once
 //
-//func GetMyRedis(cacheFolder, cacheFileName string) Redis {
+//func GetMyRedis(cacheFolder, cacheFileName string) IRedis {
 //	once.Do(func() {
 //		db := MyDb{
 //			cache: map[string][]byte{},
@@ -81,7 +81,7 @@ func (c *MyRedis) SetString(key string, value string) {
 	c.db.mutex.Lock()
 	defer c.db.mutex.Unlock()
 
-	byteArray, _ := conversion.ToByteArray(value)
+	byteArray, _ := utils.ToByteArray(value)
 	c.db.cache[key] = byteArray
 }
 
@@ -89,7 +89,7 @@ func (c *MyRedis) SetInt(key string, value int) {
 	c.db.mutex.Lock()
 	defer c.db.mutex.Unlock()
 
-	byteArray, _ := conversion.ToByteArray(value)
+	byteArray, _ := utils.ToByteArray(value)
 	c.db.cache[key] = byteArray
 }
 

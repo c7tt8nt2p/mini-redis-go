@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"crypto/tls"
 	"fmt"
-	"mini-redis-go/pkg/client"
-	"mini-redis-go/pkg/config"
-	"mini-redis-go/pkg/utils"
+	"mini-redis-go/internal/config"
+	"mini-redis-go/internal/service/client"
+	"mini-redis-go/internal/utils"
 	"os"
 	"strings"
 )

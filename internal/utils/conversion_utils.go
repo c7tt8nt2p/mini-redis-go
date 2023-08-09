@@ -1,4 +1,4 @@
-package conversion
+package utils
 
 import (
 	"encoding/binary"

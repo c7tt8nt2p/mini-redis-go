@@ -1,8 +1,8 @@
 package main
 
 import (
-	"mini-redis-go/pkg/config"
-	"mini-redis-go/pkg/server"
+	"mini-redis-go/internal/config"
+	"mini-redis-go/internal/service/server"
 )
 
 func main() {

@@ -1,11 +1,11 @@
-package server
+package cache
 
 import (
 	"os"
 	"path/filepath"
 )
 
-func cacheAsFile(cacheFolder string, k string, v []byte) error {
+func WriteCache(cacheFolder string, k string, v []byte) error {
 	file, err := os.OpenFile(filepath.Join(cacheFolder, k), os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err

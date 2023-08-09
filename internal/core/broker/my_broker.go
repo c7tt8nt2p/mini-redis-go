@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-type MiniRedisBroker interface {
+type IBroker interface {
 	IsSubscriptionConnection(*net.Conn) bool
 	Subscribe(conn *net.Conn, topic string)
 	Unsubscribe(conn *net.Conn)
