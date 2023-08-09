@@ -1,7 +1,8 @@
-package utils
+package utils_test
 
 import (
 	"crypto/tls"
+	"mini-redis-go/internal/utils"
 	"testing"
 )
 
@@ -18,7 +19,7 @@ func TestWriteToServer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			WriteToServer(tt.args.conn, tt.args.message)
+			utils.WriteToServer(tt.args.conn, tt.args.message)
 		})
 	}
 }
