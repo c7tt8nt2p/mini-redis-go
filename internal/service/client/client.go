@@ -81,6 +81,7 @@ func (c *Client) Read() (string, error) {
 }
 
 func (c *Client) Subscribe(topic string) ISubscriber {
+
 	msg := fmt.Sprintf("SUBSCRIBE %s\n", topic)
 	utils.WriteToServer(c.conn, msg)
 

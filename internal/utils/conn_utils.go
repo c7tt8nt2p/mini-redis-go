@@ -1,12 +1,12 @@
 package utils
 
 import (
-	"crypto/tls"
+	"io"
 	"log"
 )
 
-func WriteToServer(conn *tls.Conn, message string) {
-	_, err := (*conn).Write([]byte(message))
+func WriteToServer(w io.Writer, message string) {
+	_, err := w.Write([]byte(message))
 	if err != nil {
 		log.Panic("Error sending message to server: ", err)
 	}

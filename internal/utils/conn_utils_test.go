@@ -1,25 +1,27 @@
-package utils_test
+package utils
 
 import (
-	"crypto/tls"
-	"mini-redis-go/internal/utils"
+	"errors"
+	"go.uber.org/mock/gomock"
+	"mini-redis-go/internal/mock"
+	"mini-redis-go/internal/test_utils"
 	"testing"
 )
 
-func TestWriteToServer(t *testing.T) {
-	type args struct {
-		conn    *tls.Conn
-		message string
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add integration_test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			utils.WriteToServer(tt.args.conn, tt.args.message)
-		})
-	}
+func TestWriteToServerShouldBeWritten(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	msg := "test_utils message"
+	writer := mock.NewMockWriter(ctrl)
+	writer.EXPECT().Write([]byte(msg)).Times(1)
+
+	WriteToServer(writer, msg)
+}
+
+func TestWriteToServerShouldPanic(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	msg := "test_utils message"
+	writer := mock.NewMockWriter(ctrl)
+	writer.EXPECT().Write([]byte(msg)).Return(0, errors.New("error test_utils")).Times(1)
+
+	test_utils.ShouldPanicWithError(t, func() { WriteToServer(writer, msg) }, "Error sending message to server: error test_utils")
 }
