@@ -1,11 +1,11 @@
-package test
+package integration_test
 
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"mini-redis-go/internal/config"
 	"mini-redis-go/internal/core/redis"
-	"mini-redis-go/internal/test/utils"
+	"mini-redis-go/internal/integration_test/utils"
 	"os"
 	"path/filepath"
 	"testing"
