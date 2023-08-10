@@ -9,19 +9,19 @@ var brokerServiceInstance *BrokerService
 var brokerServiceMutex = &sync.Mutex{}
 
 type IBroker interface {
-	IsSubscriptionConnection(*net.Conn) bool
-	Subscribe(conn *net.Conn, topic string)
-	Unsubscribe(conn *net.Conn)
-	GetTopicFromConnection(conn *net.Conn) (string, bool)
-	Publish(conn *net.Conn, topic string, message string)
+	IsSubscriptionConnection(net.Conn) bool
+	Subscribe(conn net.Conn, topic string)
+	Unsubscribe(conn net.Conn)
+	GetTopicFromConnection(conn net.Conn) (string, bool)
+	Publish(conn net.Conn, topic string, message string)
 }
 
 type BrokerService struct {
 	mutex sync.Mutex
-	// map of connection and topic
-	clients map[*net.Conn]string
-	// map of topic and connections
-	subscribers map[string][]*net.Conn
+	// clients map of connection and topic
+	clients map[net.Conn]string
+	// subscribers map of topic and connections
+	subscribers map[string][]net.Conn
 }
 
 func NewBrokerService() *BrokerService {
@@ -30,20 +30,20 @@ func NewBrokerService() *BrokerService {
 		defer brokerServiceMutex.Unlock()
 		if brokerServiceInstance == nil {
 			brokerServiceInstance = &BrokerService{
-				clients:     map[*net.Conn]string{},
-				subscribers: map[string][]*net.Conn{},
+				clients:     map[net.Conn]string{},
+				subscribers: map[string][]net.Conn{},
 			}
 		}
 	}
 	return brokerServiceInstance
 }
 
-func (m *BrokerService) IsSubscriptionConnection(conn *net.Conn) bool {
+func (m *BrokerService) IsSubscriptionConnection(conn net.Conn) bool {
 	_, exists := m.clients[conn]
 	return exists
 }
 
-func (m *BrokerService) Subscribe(conn *net.Conn, topic string) {
+func (m *BrokerService) Subscribe(conn net.Conn, topic string) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -52,12 +52,12 @@ func (m *BrokerService) Subscribe(conn *net.Conn, topic string) {
 		updatedConns := append(v, conn)
 		m.subscribers[topic] = updatedConns
 	} else {
-		m.subscribers[topic] = []*net.Conn{conn}
+		m.subscribers[topic] = []net.Conn{conn}
 	}
 	m.clients[conn] = topic
 }
 
-func (m *BrokerService) Unsubscribe(conn *net.Conn) {
+func (m *BrokerService) Unsubscribe(conn net.Conn) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -68,10 +68,10 @@ func (m *BrokerService) Unsubscribe(conn *net.Conn) {
 		delete(m.clients, conn)
 	}
 
-	_ = (*conn).Close()
+	_ = conn.Close()
 }
 
-func removeConnection(conns []*net.Conn, conn *net.Conn) []*net.Conn {
+func removeConnection(conns []net.Conn, conn net.Conn) []net.Conn {
 	for i, v := range conns {
 		if v == conn {
 			updatedList := append(conns[:i], conns[i+1:]...)
@@ -81,12 +81,12 @@ func removeConnection(conns []*net.Conn, conn *net.Conn) []*net.Conn {
 	return conns
 }
 
-func (m *BrokerService) GetTopicFromConnection(conn *net.Conn) (string, bool) {
+func (m *BrokerService) GetTopicFromConnection(conn net.Conn) (string, bool) {
 	topic, exists := m.clients[conn]
 	return topic, exists
 }
 
-func (m *BrokerService) Publish(conn *net.Conn, topic string, message string) {
+func (m *BrokerService) Publish(conn net.Conn, topic string, message string) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -96,6 +96,6 @@ func (m *BrokerService) Publish(conn *net.Conn, topic string, message string) {
 		if aSubscriber == conn {
 			continue
 		}
-		_, _ = (*aSubscriber).Write([]byte(message))
+		_, _ = aSubscriber.Write([]byte(message))
 	}
 }

@@ -107,24 +107,24 @@ func (s *ServerService) SetCacheFolder(cacheFolder string) {
 	s.cacheFolder = cacheFolder
 }
 
-func acceptANewConnection(listener *net.Listener) (*net.Conn, error) {
+func acceptANewConnection(listener *net.Listener) (net.Conn, error) {
 	conn, err := (*listener).Accept()
 	if err != nil {
 		return nil, err
 	}
 	log.Println("incoming connection from: ", conn.RemoteAddr())
-	return &conn, nil
+	return conn, nil
 }
 
-func handleConnection(serverService *ServerService, conn *net.Conn) {
+func handleConnection(serverService *ServerService, conn net.Conn) {
 	defer func(connection net.Conn) {
 		err := connection.Close()
 		if err != nil {
 			log.Println("error when closing a connection: ", err.Error())
 		}
-	}(*conn)
+	}(conn)
 
-	reader := bufio.NewReader(*conn)
+	reader := bufio.NewReader(conn)
 	for {
 		message, err := readMessage(serverService, reader, conn)
 		if err != nil {
@@ -136,12 +136,12 @@ func handleConnection(serverService *ServerService, conn *net.Conn) {
 			handleSubscriptionConnection(serverService, conn, message)
 		} else {
 			handleNonSubscriptionConnection(serverService, conn, message)
-			fmt.Printf("\t[%s]: %s", (*conn).RemoteAddr().String(), message)
+			fmt.Printf("\t[%s]: %s", conn.RemoteAddr().String(), message)
 		}
 	}
 }
 
-func handleSubscriptionConnection(serverService *ServerService, conn *net.Conn, message string) {
+func handleSubscriptionConnection(serverService *ServerService, conn net.Conn, message string) {
 	cmdType := parser.ParseSubscriptionCommand(message)
 	switch cmdType {
 	case parser.UnsubscribeCmd:
@@ -151,12 +151,12 @@ func handleSubscriptionConnection(serverService *ServerService, conn *net.Conn, 
 	}
 }
 
-func handleNonSubscriptionConnection(serverService *ServerService, conn *net.Conn, message string) {
+func handleNonSubscriptionConnection(serverService *ServerService, conn net.Conn, message string) {
 	cmdType := parser.ParseNonSubscriptionCommand(message)
 
 	switch cmdType {
 	case parser.ExitCmd:
-		serverService.cmdHandlerService.ExitCmdHandler((*conn).RemoteAddr().String())
+		serverService.cmdHandlerService.ExitCmdHandler(conn.RemoteAddr().String())
 	case parser.PingCmd:
 		if err := serverService.cmdHandlerService.PingCmdHandler(conn); err != nil {
 			log.Println("error sending response to pingCmd: ", err)
@@ -165,7 +165,7 @@ func handleNonSubscriptionConnection(serverService *ServerService, conn *net.Con
 		err := serverService.cmdHandlerService.SetCmdHandler(conn, serverService.GetCacheFolder(), message)
 		if err != nil {
 			log.Println("error sending response to setCmd: ", err)
-			_ = (*conn).Close()
+			_ = conn.Close()
 		}
 	case parser.GetCmd:
 		err := serverService.cmdHandlerService.GetCmdHandler(conn, message)
@@ -186,12 +186,12 @@ func handleNonSubscriptionConnection(serverService *ServerService, conn *net.Con
 	}
 }
 
-func readMessage(serverService *ServerService, reader *bufio.Reader, conn *net.Conn) (string, error) {
+func readMessage(serverService *ServerService, reader *bufio.Reader, conn net.Conn) (string, error) {
 	message, err := reader.ReadString('\n')
 	if err != nil {
 		if err == io.EOF || err == io.ErrUnexpectedEOF {
 			serverService.cmdHandlerService.UnsubscribeCmdHandler(conn)
-			fmt.Println("goodbye", (*conn).RemoteAddr())
+			fmt.Println("goodbye", conn.RemoteAddr())
 		} else {
 			fmt.Println("error reading message from client:", err.Error())
 		}
