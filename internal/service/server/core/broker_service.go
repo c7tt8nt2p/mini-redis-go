@@ -1,22 +1,22 @@
-package broker
+package core
 
 import (
 	"net"
 	"sync"
 )
 
+var brokerServiceInstance *BrokerService
+var brokerServiceMutex = &sync.Mutex{}
+
 type IBroker interface {
 	IsSubscriptionConnection(*net.Conn) bool
 	Subscribe(conn *net.Conn, topic string)
 	Unsubscribe(conn *net.Conn)
-	GetTopicFromConnection(conn *net.Conn) (bool, string)
+	GetTopicFromConnection(conn *net.Conn) (string, bool)
 	Publish(conn *net.Conn, topic string, message string)
 }
 
-var instance *MyBroker
-var mutex = &sync.Mutex{}
-
-type MyBroker struct {
+type BrokerService struct {
 	mutex sync.Mutex
 	// map of connection and topic
 	clients map[*net.Conn]string
@@ -24,29 +24,26 @@ type MyBroker struct {
 	subscribers map[string][]*net.Conn
 }
 
-func InitMyBroker() {
-	if instance == nil {
-		mutex.Lock()
-		defer mutex.Unlock()
-		if instance == nil {
-			instance = &MyBroker{
+func NewBrokerService() *BrokerService {
+	if brokerServiceInstance == nil {
+		brokerServiceMutex.Lock()
+		defer brokerServiceMutex.Unlock()
+		if brokerServiceInstance == nil {
+			brokerServiceInstance = &BrokerService{
 				clients:     map[*net.Conn]string{},
 				subscribers: map[string][]*net.Conn{},
 			}
 		}
 	}
+	return brokerServiceInstance
 }
 
-func GetMyBroker() *MyBroker {
-	return instance
-}
-
-func (m *MyBroker) IsSubscriptionConnection(conn *net.Conn) bool {
+func (m *BrokerService) IsSubscriptionConnection(conn *net.Conn) bool {
 	_, exists := m.clients[conn]
 	return exists
 }
 
-func (m *MyBroker) Subscribe(conn *net.Conn, topic string) {
+func (m *BrokerService) Subscribe(conn *net.Conn, topic string) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -60,7 +57,7 @@ func (m *MyBroker) Subscribe(conn *net.Conn, topic string) {
 	m.clients[conn] = topic
 }
 
-func (m *MyBroker) Unsubscribe(conn *net.Conn) {
+func (m *BrokerService) Unsubscribe(conn *net.Conn) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -84,12 +81,12 @@ func removeConnection(conns []*net.Conn, conn *net.Conn) []*net.Conn {
 	return conns
 }
 
-func (m *MyBroker) GetTopicFromConnection(conn *net.Conn) (string, bool) {
+func (m *BrokerService) GetTopicFromConnection(conn *net.Conn) (string, bool) {
 	topic, exists := m.clients[conn]
 	return topic, exists
 }
 
-func (m *MyBroker) Publish(conn *net.Conn, topic string, message string) {
+func (m *BrokerService) Publish(conn *net.Conn, topic string, message string) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 

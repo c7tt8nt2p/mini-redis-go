@@ -11,7 +11,7 @@ type ISubscriber interface {
 }
 
 type Subscriber struct {
-	c *Client
+	c *ClientService
 }
 
 func (s *Subscriber) NextMessage() (string, error) {

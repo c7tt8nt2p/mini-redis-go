@@ -7,43 +7,61 @@ import (
 	"io"
 	"log"
 	"mini-redis-go/internal/config"
-	"mini-redis-go/internal/core/broker"
-	"mini-redis-go/internal/core/redis"
-	"mini-redis-go/internal/service/cache"
+	"mini-redis-go/internal/service/server/core"
+	"mini-redis-go/internal/service/server/handler"
+	"mini-redis-go/internal/service/server/parser"
+	"mini-redis-go/internal/utils"
 	"net"
+	"sync"
 )
+
+var serverServiceInstance *ServerService
+var serverServiceMutex = &sync.Mutex{}
 
 type IServer interface {
 	Start()
 	Stop()
+	GetCacheFolder() string
 }
 
-type Server struct {
-	listener    *net.Listener
-	Addr        string
-	CacheFolder string
-	stopSignal  chan bool
+type ServerService struct {
+	redisService      core.IRedis
+	brokerService     core.IBroker
+	cmdHandlerService handler.ICmdHandler
+	listener          *net.Listener
+	Addr              string
+	CacheFolder       string
+	stopSignal        chan bool
 }
 
-func NewServer(host, port, cacheFolder string) IServer {
-	s := Server{
-		Addr:        host + ":" + port,
-		CacheFolder: cacheFolder,
-		stopSignal:  make(chan bool, 1),
+func NewServerService(host, port, cacheFolder string) *ServerService {
+	if serverServiceInstance == nil {
+		serverServiceMutex.Lock()
+		defer serverServiceMutex.Unlock()
+		if serverServiceInstance == nil {
+			instance := &ServerService{
+				redisService:      core.NewRedisService(),
+				brokerService:     core.NewBrokerService(),
+				cmdHandlerService: handler.NewCmdHandlerService(),
+				Addr:              host + ":" + port,
+				CacheFolder:       cacheFolder,
+				stopSignal:        make(chan bool, 1),
+			}
+			serverServiceInstance = instance
+		}
 	}
-	return &s
-
+	return serverServiceInstance
 }
 
-func (s *Server) Start() {
-	cert := loadCert()
+func (s *ServerService) Start() {
+	cert := utils.LoadCertificate(config.ServerPublicKeyFile, config.ServerPrivateKeyFile)
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{*cert},
 		ClientAuth:   tls.RequireAnyClientCert,
 	}
 	listener, err := tls.Listen("tcp", s.Addr, tlsConfig)
 	if err != nil {
-		log.Panic("Error when initialize a connection: ", err)
+		log.Panic("error when initialize a connection: ", err)
 	}
 	s.listener = &listener
 	defer func(listener net.Listener) {
@@ -53,14 +71,9 @@ func (s *Server) Start() {
 	s.listen(listener)
 }
 
-func (s *Server) listen(listener net.Listener) {
-	log.Println("================================================================================================")
-	log.Println("initializing redis...")
-	redis.InitMyRedis()
-	log.Println("initializing broker...")
-	broker.InitMyBroker()
-
-	cache.ReadCache(redis.GetMyRedis(), s.CacheFolder)
+func (s *ServerService) listen(listener net.Listener) {
+	log.Println("===============================================================================================")
+	s.redisService.ReadCache(s.CacheFolder)
 	log.Println("================================================================================================")
 	log.Println("server is ready...")
 	go func() {
@@ -81,16 +94,12 @@ func (s *Server) listen(listener net.Listener) {
 	}
 }
 
-func (s *Server) Stop() {
+func (s *ServerService) Stop() {
 	s.stopSignal <- true
 }
 
-func loadCert() *tls.Certificate {
-	cert, err := tls.LoadX509KeyPair(config.ServerPublicKeyFile, config.ServerPrivateKeyFile)
-	if err != nil {
-		log.Fatal("error loading certificate: ", err)
-	}
-	return &cert
+func (s *ServerService) GetCacheFolder() string {
+	return s.CacheFolder
 }
 
 func acceptANewConnection(listener *net.Listener) (*net.Conn, error) {
@@ -102,7 +111,7 @@ func acceptANewConnection(listener *net.Listener) (*net.Conn, error) {
 	return &conn, nil
 }
 
-func handleConnection(server *Server, conn *net.Conn) {
+func handleConnection(serverService *ServerService, conn *net.Conn) {
 	defer func(connection net.Conn) {
 		err := connection.Close()
 		if err != nil {
@@ -112,70 +121,71 @@ func handleConnection(server *Server, conn *net.Conn) {
 
 	reader := bufio.NewReader(*conn)
 	for {
-		message, err := readMessage(reader, conn)
+		message, err := readMessage(serverService, reader, conn)
 		if err != nil {
 			break
 		}
 
-		subscriptionConnection := broker.GetMyBroker().IsSubscriptionConnection(conn)
+		subscriptionConnection := serverService.brokerService.IsSubscriptionConnection(conn)
 		if subscriptionConnection {
-			handleSubscriptionConnection(conn, message)
+			handleSubscriptionConnection(serverService, conn, message)
 		} else {
-			handleNonSubscriptionConnection(server, conn, message)
+			handleNonSubscriptionConnection(serverService, conn, message)
 			fmt.Printf("\t[%s]: %s", (*conn).RemoteAddr().String(), message)
 		}
 	}
 }
 
-func handleSubscriptionConnection(conn *net.Conn, message string) {
-	cmdType := parseSubscriptionCommand(message)
+func handleSubscriptionConnection(serverService *ServerService, conn *net.Conn, message string) {
+	cmdType := parser.ParseSubscriptionCommand(message)
 	switch cmdType {
-	case unsubscribeCmd:
-		unsubscribeCmdHandler(conn)
-	case publishCmd:
-		publishCmdHandler(conn, message)
+	case parser.UnsubscribeCmd:
+		serverService.cmdHandlerService.UnsubscribeCmdHandler(conn)
+	case parser.PublishCmd:
+		serverService.cmdHandlerService.PublishCmdHandler(conn, message)
 	}
 }
 
-func handleNonSubscriptionConnection(server *Server, conn *net.Conn, message string) {
-	cmdType := parseNonSubscriptionCommand(message)
+func handleNonSubscriptionConnection(serverService *ServerService, conn *net.Conn, message string) {
+	cmdType := parser.ParseNonSubscriptionCommand(message)
 
 	switch cmdType {
-	case exitCmd:
-		exitCmdHandler((*conn).RemoteAddr().String())
-	case pingCmd:
-		if err := pingCmdHandler(conn); err != nil {
+	case parser.ExitCmd:
+		serverService.cmdHandlerService.ExitCmdHandler((*conn).RemoteAddr().String())
+	case parser.PingCmd:
+		if err := serverService.cmdHandlerService.PingCmdHandler(conn); err != nil {
 			log.Println("error sending response to pingCmd: ", err)
 		}
-	case setCmd:
-		err := setCmdHandler(conn, server, message)
+	case parser.SetCmd:
+		err := serverService.cmdHandlerService.SetCmdHandler(conn, serverService.GetCacheFolder(), message)
 		if err != nil {
 			log.Println("error sending response to setCmd: ", err)
 			_ = (*conn).Close()
 		}
-	case getCmd:
-		err := getCmdHandler(conn, message)
+	case parser.GetCmd:
+		err := serverService.cmdHandlerService.GetCmdHandler(conn, message)
 		if err != nil {
 			log.Println("Error sending response to getCmd: ", err)
 		}
-	case subscribeCmd:
-		err := subscribeCmdHandler(conn, message)
+	case parser.SubscribeCmd:
+		fmt.Println("ok SubscribeCmd")
+		err := serverService.cmdHandlerService.SubscribeCmdHandler(conn, message)
 		if err != nil {
 			log.Println("Error subscribing response to getCmd: ", err)
 		}
-	case otherCmd:
-		err := otherCmdHandler(conn, message)
+	case parser.OtherCmd:
+		err := serverService.cmdHandlerService.OtherCmdHandler(conn, message)
 		if err != nil {
 			log.Println("Error sending response to otherCmd: ", err)
 		}
 	}
 }
 
-func readMessage(reader *bufio.Reader, conn *net.Conn) (string, error) {
+func readMessage(serverService *ServerService, reader *bufio.Reader, conn *net.Conn) (string, error) {
 	message, err := reader.ReadString('\n')
 	if err != nil {
 		if err == io.EOF || err == io.ErrUnexpectedEOF {
-			unsubscribeCmdHandler(conn)
+			serverService.cmdHandlerService.UnsubscribeCmdHandler(conn)
 			fmt.Println("goodbye", (*conn).RemoteAddr())
 		} else {
 			fmt.Println("error reading message from client:", err.Error())

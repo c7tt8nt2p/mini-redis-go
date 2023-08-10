@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"mini-redis-go/internal/config"
-	"mini-redis-go/internal/core/redis"
 	"mini-redis-go/internal/integration_test/utils"
+	"mini-redis-go/internal/model"
 	"os"
 	"path/filepath"
 	"testing"
@@ -50,7 +50,7 @@ func TestCache(t *testing.T) {
 		_ = os.RemoveAll(path)
 	}(tempFolder)
 	fmt.Println("tempFolder", tempFolder)
-	createCacheFileWithData(tempFolder, "testKey", append([]byte{byte(redis.StringByteType)}, []byte("tesValue")...))
+	createCacheFileWithData(tempFolder, "testKey", append([]byte{byte(model.StringByteType)}, []byte("tesValue")...))
 	s := utils.StartServer(config.ConnectionHost, config.ConnectionPort, tempFolder)
 	c := utils.ConnectToServer(config.ConnectionHost, config.ConnectionPort)
 

@@ -1,4 +1,4 @@
-test-cov:
+test-coverage:
 	go test -v -coverprofile coverage.out -coverpkg=./... ./...
 	go tool cover -html=coverage.out
 

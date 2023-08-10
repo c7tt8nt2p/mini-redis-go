@@ -19,24 +19,23 @@ type IClient interface {
 	Subscribe(topic string) ISubscriber
 }
 
-type Client struct {
+type ClientService struct {
 	addr           string
 	publicKeyFile  string
 	privateKeyFile string
 	conn           *tls.Conn
 }
 
-func NewClient(host, port, publicKeyFile, privateKeyFile string) *Client {
-	c := Client{
+func NewClientService(host, port, publicKeyFile, privateKeyFile string) *ClientService {
+	return &ClientService{
 		addr:           host + ":" + port,
 		publicKeyFile:  publicKeyFile,
 		privateKeyFile: privateKeyFile,
 	}
-	return &c
 }
 
-func (c *Client) Connect() *tls.Conn {
-	cert := loadCert()
+func (c *ClientService) Connect() *tls.Conn {
+	cert := utils.LoadCertificate(config.ClientPublicKeyFile, config.ClientPrivateKeyFile)
 	tlsConfig := &tls.Config{Certificates: []tls.Certificate{*cert}, InsecureSkipVerify: true}
 	tlsConfig.Rand = rand.Reader
 
@@ -49,16 +48,16 @@ func (c *Client) Connect() *tls.Conn {
 	return conn
 }
 
-func (c *Client) GetConnection() *tls.Conn {
+func (c *ClientService) GetConnection() *tls.Conn {
 	return c.conn
 }
 
-func (c *Client) Set(k string, v string) error {
+func (c *ClientService) Set(k string, v string) error {
 	msg := fmt.Sprintf("set %s %s\n", k, v)
 	return c.Write([]byte(msg))
 }
 
-func (c *Client) Get(k string) (string, error) {
+func (c *ClientService) Get(k string) (string, error) {
 	msg := fmt.Sprintf("get %s\n", k)
 	if err := c.Write([]byte(msg)); err != nil {
 		return "", err
@@ -66,12 +65,12 @@ func (c *Client) Get(k string) (string, error) {
 	return c.Read()
 }
 
-func (c *Client) Write(m []byte) error {
+func (c *ClientService) Write(m []byte) error {
 	_, err := (*c.conn).Write(m)
 	return err
 }
 
-func (c *Client) Read() (string, error) {
+func (c *ClientService) Read() (string, error) {
 	buf := make([]byte, 1024)
 	n, err := (*c.conn).Read(buf)
 	if err != nil {
@@ -80,7 +79,7 @@ func (c *Client) Read() (string, error) {
 	return string(buf[:n]), nil
 }
 
-func (c *Client) Subscribe(topic string) ISubscriber {
+func (c *ClientService) Subscribe(topic string) ISubscriber {
 
 	msg := fmt.Sprintf("SUBSCRIBE %s\n", topic)
 	utils.WriteToServer(c.conn, msg)
@@ -88,12 +87,4 @@ func (c *Client) Subscribe(topic string) ISubscriber {
 	return &Subscriber{
 		c: c,
 	}
-}
-
-func loadCert() *tls.Certificate {
-	cert, err := tls.LoadX509KeyPair(config.ClientPublicKeyFile, config.ClientPrivateKeyFile)
-	if err != nil {
-		panic(fmt.Sprintf("Error loading certificate: %s", err))
-	}
-	return &cert
 }

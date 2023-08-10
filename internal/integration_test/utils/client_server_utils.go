@@ -18,13 +18,13 @@ func CreateTempFolder() string {
 }
 
 func StartServer(host, port, cacheFolder string) server.IServer {
-	s := server.NewServer(host, port, cacheFolder)
+	s := server.NewServerService(host, port, cacheFolder)
 	go s.Start()
 	return s
 }
 
 func ConnectToServer(host, port string) client.IClient {
-	c := client.NewClient(host, port, config.ClientPublicKeyFile, config.ClientPrivateKeyFile)
+	c := client.NewClientService(host, port, config.ClientPublicKeyFile, config.ClientPrivateKeyFile)
 	c.Connect()
 	return c
 }
