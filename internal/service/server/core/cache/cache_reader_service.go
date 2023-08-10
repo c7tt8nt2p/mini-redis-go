@@ -54,13 +54,6 @@ func (c *CacheReaderService) ReadFromFile(cacheFolder string) map[string][]byte 
 
 func readCacheFromFile(cacheFilePath string) ([]byte, error) {
 	log.Println("	uncache:", cacheFilePath)
-	file, err := os.Open(cacheFilePath)
-	if err != nil {
-		return nil, err
-	}
-	defer func(readFile *os.File) {
-		_ = readFile.Close()
-	}(file)
 
 	data, err := os.ReadFile(cacheFilePath)
 	if err != nil {
