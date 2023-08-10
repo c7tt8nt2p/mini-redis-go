@@ -22,6 +22,7 @@ type IServer interface {
 	Start()
 	Stop()
 	GetCacheFolder() string
+	SetCacheFolder(cacheFolder string)
 }
 
 type ServerService struct {
@@ -30,7 +31,7 @@ type ServerService struct {
 	cmdHandlerService handler.ICmdHandler
 	listener          *net.Listener
 	Addr              string
-	CacheFolder       string
+	cacheFolder       string
 	stopSignal        chan bool
 }
 
@@ -44,7 +45,7 @@ func NewServerService(host, port, cacheFolder string) *ServerService {
 				brokerService:     core.NewBrokerService(),
 				cmdHandlerService: handler.NewCmdHandlerService(),
 				Addr:              host + ":" + port,
-				CacheFolder:       cacheFolder,
+				cacheFolder:       cacheFolder,
 				stopSignal:        make(chan bool, 1),
 			}
 			serverServiceInstance = instance
@@ -73,7 +74,7 @@ func (s *ServerService) Start() {
 
 func (s *ServerService) listen(listener net.Listener) {
 	log.Println("===============================================================================================")
-	s.redisService.ReadCache(s.CacheFolder)
+	s.redisService.ReadCache(s.cacheFolder)
 	log.Println("================================================================================================")
 	log.Println("server is ready...")
 	go func() {
@@ -99,7 +100,11 @@ func (s *ServerService) Stop() {
 }
 
 func (s *ServerService) GetCacheFolder() string {
-	return s.CacheFolder
+	return s.cacheFolder
+}
+
+func (s *ServerService) SetCacheFolder(cacheFolder string) {
+	s.cacheFolder = cacheFolder
 }
 
 func acceptANewConnection(listener *net.Listener) (*net.Conn, error) {

@@ -6,12 +6,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"mini-redis-go/internal/config"
 	"mini-redis-go/internal/integration_test/utils"
+	"mini-redis-go/internal/test_utils"
 	"os"
 	"testing"
 )
 
 func TestSubscribeAndPublish(t *testing.T) {
-	tempFolder := utils.CreateTempFolder()
+	tempFolder := test_utils.CreateTempFolder()
 	defer func(path string) {
 		_ = os.RemoveAll(path)
 	}(tempFolder)

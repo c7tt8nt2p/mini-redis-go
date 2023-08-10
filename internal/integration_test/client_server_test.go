@@ -1,22 +1,22 @@
 package integration_test
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"mini-redis-go/internal/config"
 	"mini-redis-go/internal/integration_test/utils"
 	"mini-redis-go/internal/model"
+	"mini-redis-go/internal/test_utils"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
 func TestPingPong(t *testing.T) {
-	tempFolder := utils.CreateTempFolder()
+	tempFolder := test_utils.CreateTempFolder()
 	defer func(path string) {
 		_ = os.RemoveAll(path)
 	}(tempFolder)
 	s := utils.StartServer(config.ConnectionHost, config.ConnectionPort, tempFolder)
+	s.SetCacheFolder(tempFolder)
 	c := utils.ConnectToServer(config.ConnectionHost, config.ConnectionPort)
 
 	utils.Write(t, c, []byte("PING\n"))
@@ -27,11 +27,12 @@ func TestPingPong(t *testing.T) {
 }
 
 func TestSetAndGet(t *testing.T) {
-	tempFolder := utils.CreateTempFolder()
+	tempFolder := test_utils.CreateTempFolder()
 	defer func(path string) {
 		_ = os.RemoveAll(path)
 	}(tempFolder)
 	s := utils.StartServer(config.ConnectionHost, config.ConnectionPort, tempFolder)
+	s.SetCacheFolder(tempFolder)
 	c := utils.ConnectToServer(config.ConnectionHost, config.ConnectionPort)
 
 	utils.Set(t, c, "hello", "world")
@@ -45,26 +46,17 @@ func TestSetAndGet(t *testing.T) {
 }
 
 func TestCache(t *testing.T) {
-	tempFolder := utils.CreateTempFolder()
+	tempFolder := test_utils.CreateTempFolder()
 	defer func(path string) {
 		_ = os.RemoveAll(path)
 	}(tempFolder)
-	fmt.Println("tempFolder", tempFolder)
-	createCacheFileWithData(tempFolder, "testKey", append([]byte{byte(model.StringByteType)}, []byte("tesValue")...))
+	test_utils.CreateFileWithData(tempFolder, "testKey", append([]byte{byte(model.StringByteType)}, []byte("tesValue")...))
 	s := utils.StartServer(config.ConnectionHost, config.ConnectionPort, tempFolder)
+	s.SetCacheFolder(tempFolder)
 	c := utils.ConnectToServer(config.ConnectionHost, config.ConnectionPort)
 
 	response := utils.Get(t, c, "testKey")
 	assert.Equal(t, "tesValue\n", response)
 
 	s.Stop()
-}
-
-func createCacheFileWithData(folder string, k string, v []byte) {
-	file, _ := os.OpenFile(filepath.Join(folder, k), os.O_CREATE|os.O_WRONLY, 0644)
-	defer func(file *os.File) {
-		_ = file.Close()
-	}(file)
-
-	_, _ = file.Write(v)
 }

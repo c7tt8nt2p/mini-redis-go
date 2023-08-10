@@ -1,21 +1,11 @@
 package utils
 
 import (
-	"log"
 	"mini-redis-go/internal/config"
 	"mini-redis-go/internal/service/client"
 	"mini-redis-go/internal/service/server"
-	"os"
 	"testing"
 )
-
-func CreateTempFolder() string {
-	folder, err := os.MkdirTemp("", "mini-redis")
-	if err != nil {
-		log.Fatal("error creating temp folder", err)
-	}
-	return folder
-}
 
 func StartServer(host, port, cacheFolder string) server.IServer {
 	s := server.NewServerService(host, port, cacheFolder)
