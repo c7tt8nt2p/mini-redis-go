@@ -1,0 +1,7 @@
+version = 1
+
+[[analyzers]]
+name = "go"
+
+  [analyzers.meta]
+  import_root = "github.com/c7tt8nt2p/mini-redis-go"
