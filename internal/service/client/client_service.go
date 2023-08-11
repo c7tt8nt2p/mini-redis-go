@@ -42,7 +42,7 @@ func (c *ClientService) Connect() *tls.Conn {
 		Certificates:       []tls.Certificate{*cert},
 		InsecureSkipVerify: true,
 		MinVersion:         tls.VersionTLS12,
-		MaxVersion:         tls.VersionTLS13,
+		MaxVersion:         0,
 	}
 	tlsConfig.Rand = rand.Reader
 

@@ -30,7 +30,7 @@ func NewCacheReaderService() *CacheReaderService {
 	return cacheReaderServiceInstance
 }
 
-func (c *CacheReaderService) ReadFromFile(cacheFolder string) map[string][]byte {
+func (*CacheReaderService) ReadFromFile(cacheFolder string) map[string][]byte {
 	log.Println("reading cache... from", cacheFolder)
 
 	cache := map[string][]byte{}

@@ -50,8 +50,8 @@ func (m *BrokerService) Subscribe(conn net.Conn, topic string) {
 
 	v, keyExists := m.subscribers[topic]
 	if keyExists {
-		updatedConns := append(v, conn)
-		m.subscribers[topic] = updatedConns
+		v := append(v, conn)
+		m.subscribers[topic] = v
 	} else {
 		m.subscribers[topic] = []net.Conn{conn}
 	}
@@ -75,8 +75,7 @@ func (m *BrokerService) Unsubscribe(conn net.Conn) {
 func removeConnection(conns []net.Conn, conn net.Conn) []net.Conn {
 	for i, v := range conns {
 		if v == conn {
-			updatedList := append(conns[:i], conns[i+1:]...)
-			return updatedList
+			return append(conns[:i], conns[i+1:]...)
 		}
 	}
 	return conns
