@@ -60,6 +60,7 @@ func (s *ServerService) Start() {
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{*cert},
 		ClientAuth:   tls.RequireAnyClientCert,
+		MinVersion:   tls.VersionTLS13,
 	}
 	listener, err := tls.Listen("tcp", s.Addr, tlsConfig)
 	if err != nil {

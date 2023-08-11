@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"mini-redis-go/internal/service/client"
 	"mini-redis-go/internal/utils"
 	"os"
@@ -33,19 +34,28 @@ func (c *ClientApp) ConnectToServer() *tls.Conn {
 }
 
 func (c *ClientApp) OnMessageReceivedFromServer(handlerFunc func(messageFromServer string)) {
-	go func() {
+	go c.handleMessageFromServer(handlerFunc)()
+}
+
+func (c *ClientApp) handleMessageFromServer(handlerFunc func(messageFromServer string)) func() {
+	return func() {
 		buffer := make([]byte, 1024)
 		for {
 			n, err := c.clientService.GetConnection().Read(buffer)
 			if err != nil {
-				fmt.Println("Error reading server response:", err)
-				break
+				if err == io.EOF || err == io.ErrUnexpectedEOF {
+					_ = c.clientService.GetConnection().Close()
+					os.Exit(0)
+				} else {
+					fmt.Println("Error reading server response:", err)
+					break
+				}
 			}
 			message := string(buffer[:n])
 
 			handlerFunc(message)
 		}
-	}()
+	}
 }
 
 func (c *ClientApp) OnMessageReceivedFromClient(handlerFunc func(messageFromClient string)) {

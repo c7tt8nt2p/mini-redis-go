@@ -22,6 +22,7 @@ func main() {
 		}
 	}(conn)
 	fmt.Println("Connected to the server")
+
 	myApp.OnMessageReceivedFromServer(handleMessagesFromServer)
 	myApp.OnMessageReceivedFromClient(handleMessagesFromClient)
 }

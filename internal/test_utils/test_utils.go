@@ -8,13 +8,6 @@ import (
 	"testing"
 )
 
-func ShouldPanic(t *testing.T, f func()) {
-	t.Helper()
-	defer func() { _ = recover() }()
-	f()
-	t.Errorf("should have panicked but did not")
-}
-
 func ShouldPanicWithError(t *testing.T, f func(), expectedErr string) {
 	t.Helper()
 	defer func() {
@@ -34,7 +27,7 @@ func CreateTempFolder() string {
 }
 
 func CreateFileWithData(folder string, k string, v []byte) {
-	file, _ := os.OpenFile(filepath.Join(folder, k), os.O_CREATE|os.O_WRONLY, 0644)
+	file, _ := os.OpenFile(filepath.Join(folder, k), os.O_CREATE|os.O_WRONLY, 0600)
 	defer func(file *os.File) {
 		_ = file.Close()
 	}(file)

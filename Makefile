@@ -4,7 +4,7 @@ test:
 test-integration:
 	go test -v ./internal/integration_test/...
 
-test-cov:
+test-coverage:
 	gocov test \
         ./internal/app/... \
         ./internal/config/... \

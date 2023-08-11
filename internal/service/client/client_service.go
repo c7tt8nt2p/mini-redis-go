@@ -38,7 +38,11 @@ func NewClientService(host, port, publicKeyFile, privateKeyFile string) *ClientS
 
 func (c *ClientService) Connect() *tls.Conn {
 	cert := utils.LoadCertificate(config.ClientPublicKeyFile, config.ClientPrivateKeyFile)
-	tlsConfig := &tls.Config{Certificates: []tls.Certificate{*cert}, InsecureSkipVerify: true}
+	tlsConfig := &tls.Config{
+		Certificates:       []tls.Certificate{*cert},
+		InsecureSkipVerify: true,
+		MinVersion:         tls.VersionTLS13,
+	}
 	tlsConfig.Rand = rand.Reader
 
 	conn, err := tls.Dial("tcp", c.addr, tlsConfig)
