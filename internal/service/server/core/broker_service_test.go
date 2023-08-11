@@ -1,13 +1,19 @@
 package core
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"mini-redis-go/internal/mock"
 	"net"
 	"testing"
 )
+
+func NewBrokerServiceTestInstance() *BrokerService {
+	return &BrokerService{
+		clients:     map[net.Conn]string{},
+		subscribers: map[string][]net.Conn{},
+	}
+}
 
 func TestNewBrokerService(t *testing.T) {
 	service := NewBrokerService()
@@ -20,13 +26,11 @@ func TestBrokerService_IsSubscriptionConnection(t *testing.T) {
 	conn1 := mock.NewMockConn(ctrl)
 	conn2 := mock.NewMockConn(ctrl)
 
-	service := NewBrokerService()
+	service := NewBrokerServiceTestInstance()
 	service.clients[conn1] = "topic1"
 
 	assert.True(t, service.IsSubscriptionConnection(conn1))
 	assert.False(t, service.IsSubscriptionConnection(conn2))
-
-	fmt.Println(service.clients)
 }
 
 func TestBrokerService_Subscribe(t *testing.T) {
@@ -35,7 +39,7 @@ func TestBrokerService_Subscribe(t *testing.T) {
 	conn2 := mock.NewMockConn(ctrl)
 	topic := "topicA"
 
-	service := NewBrokerService()
+	service := NewBrokerServiceTestInstance()
 	service.Subscribe(conn1, topic)
 
 	assert.Equal(t, 1, len(service.subscribers[topic]))
@@ -52,7 +56,7 @@ func TestBrokerService_Unsubscribe(t *testing.T) {
 	conn.EXPECT().Close().Times(1)
 	topic := "topicB"
 
-	service := NewBrokerService()
+	service := NewBrokerServiceTestInstance()
 	service.Subscribe(conn, topic)
 	service.Unsubscribe(conn)
 
@@ -66,7 +70,7 @@ func TestBrokerService_GetTopicFromConnection(t *testing.T) {
 	conn := mock.NewMockConn(ctrl)
 	topic := "topicC"
 
-	service := NewBrokerService()
+	service := NewBrokerServiceTestInstance()
 	service.clients[conn] = topic
 
 	response, _ := service.GetTopicFromConnection(conn)
@@ -81,7 +85,7 @@ func TestBrokerService_Publish(t *testing.T) {
 	message := "hello"
 	conn2.EXPECT().Write([]byte(message))
 
-	service := NewBrokerService()
+	service := NewBrokerServiceTestInstance()
 	service.Subscribe(conn1, topic)
 	service.Subscribe(conn2, topic)
 

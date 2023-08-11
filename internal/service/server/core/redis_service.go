@@ -11,7 +11,6 @@ var redisServiceMutex = &sync.Mutex{}
 type IRedis interface {
 	Get(key string) []byte
 	Set(key string, value []byte)
-	Db() map[string][]byte
 	ExistsByKey(key string) bool
 	ReadCache(cacheFolder string)
 	WriteCache(cacheFolder string, k string, v []byte) error
@@ -71,10 +70,6 @@ func (r *RedisService) Set(key string, value []byte) {
 	defer r.db.mutex.Unlock()
 
 	r.db.cache[key] = value
-}
-
-func (r *RedisService) Db() map[string][]byte {
-	return r.db.cache
 }
 
 func (r *RedisService) ExistsByKey(key string) bool {

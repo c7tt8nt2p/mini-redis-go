@@ -87,40 +87,16 @@ func (mr *MockIRedisMockRecorder) ReadCache(cacheFolder interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadCache", reflect.TypeOf((*MockIRedis)(nil).ReadCache), cacheFolder)
 }
 
-// SetByteArray mocks base method.
-func (m *MockIRedis) SetByteArray(key string, value []byte) {
+// Set mocks base method.
+func (m *MockIRedis) Set(key string, value []byte) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetByteArray", key, value)
+	m.ctrl.Call(m, "Set", key, value)
 }
 
-// SetByteArray indicates an expected call of SetByteArray.
-func (mr *MockIRedisMockRecorder) SetByteArray(key, value interface{}) *gomock.Call {
+// Set indicates an expected call of Set.
+func (mr *MockIRedisMockRecorder) Set(key, value interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetByteArray", reflect.TypeOf((*MockIRedis)(nil).SetByteArray), key, value)
-}
-
-// SetInt mocks base method.
-func (m *MockIRedis) SetInt(key string, value int) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetInt", key, value)
-}
-
-// SetInt indicates an expected call of SetInt.
-func (mr *MockIRedisMockRecorder) SetInt(key, value interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetInt", reflect.TypeOf((*MockIRedis)(nil).SetInt), key, value)
-}
-
-// SetString mocks base method.
-func (m *MockIRedis) SetString(key, value string) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetString", key, value)
-}
-
-// SetString indicates an expected call of SetString.
-func (mr *MockIRedisMockRecorder) SetString(key, value interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetString", reflect.TypeOf((*MockIRedis)(nil).SetString), key, value)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockIRedis)(nil).Set), key, value)
 }
 
 // WriteCache mocks base method.
