@@ -2,15 +2,15 @@ package core
 
 import (
 	"mini-redis-go/internal/service/server/core/cache"
-	"mini-redis-go/internal/utils"
 	"sync"
 )
 
+var redisServiceInstance *RedisService
+var redisServiceMutex = &sync.Mutex{}
+
 type IRedis interface {
 	Get(key string) []byte
-	SetByteArray(key string, value []byte)
-	SetString(key string, value string)
-	SetInt(key string, value int)
+	Set(key string, value []byte)
 	Db() map[string][]byte
 	ExistsByKey(key string) bool
 	ReadCache(cacheFolder string)
@@ -28,15 +28,37 @@ type MyDb struct {
 	cache map[string][]byte
 }
 
+//var once sync.Once
+//
+//func GetMyRedis(cacheFolder, cacheFileName string) IRedis {
+//	once.Do(func() {
+//		db := MyDb{
+//			cache: map[string][]byte{},
+//		}
+//		instance = &myRedis{
+//			db:            &db,
+//			cacheFileName: filepath.Join(cacheFolder, cacheFileName),
+//		}
+//	})
+//	return instance
+//}
+
 func NewRedisService() *RedisService {
-	db := MyDb{
-		cache: map[string][]byte{},
+	if redisServiceInstance == nil {
+		redisServiceMutex.Lock()
+		defer redisServiceMutex.Unlock()
+		if redisServiceInstance == nil {
+			db := MyDb{
+				cache: map[string][]byte{},
+			}
+			redisServiceInstance = &RedisService{
+				cacheReaderService: cache.NewCacheReaderService(),
+				cacheWriterService: cache.NewCacheWriterService(),
+				db:                 &db,
+			}
+		}
 	}
-	return &RedisService{
-		cacheReaderService: cache.NewCacheReaderService(),
-		cacheWriterService: cache.NewCacheWriterService(),
-		db:                 &db,
-	}
+	return redisServiceInstance
 }
 
 func (r *RedisService) Get(key string) []byte {
@@ -44,27 +66,11 @@ func (r *RedisService) Get(key string) []byte {
 	return bytes
 }
 
-func (r *RedisService) SetByteArray(key string, value []byte) {
+func (r *RedisService) Set(key string, value []byte) {
 	r.db.mutex.Lock()
 	defer r.db.mutex.Unlock()
 
 	r.db.cache[key] = value
-}
-
-func (r *RedisService) SetString(key string, value string) {
-	r.db.mutex.Lock()
-	defer r.db.mutex.Unlock()
-
-	byteArray, _ := utils.ToByteArray(value)
-	r.db.cache[key] = byteArray
-}
-
-func (r *RedisService) SetInt(key string, value int) {
-	r.db.mutex.Lock()
-	defer r.db.mutex.Unlock()
-
-	byteArray, _ := utils.ToByteArray(value)
-	r.db.cache[key] = byteArray
 }
 
 func (r *RedisService) Db() map[string][]byte {
@@ -79,7 +85,7 @@ func (r *RedisService) ExistsByKey(key string) bool {
 func (r *RedisService) ReadCache(cacheFolder string) {
 	foundCache := r.cacheReaderService.ReadFromFile(cacheFolder)
 	for k, v := range foundCache {
-		r.SetByteArray(k, v)
+		r.Set(k, v)
 	}
 }
 

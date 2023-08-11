@@ -5,6 +5,9 @@ import (
 	"sync"
 )
 
+var brokerServiceInstance *BrokerService
+var brokerServiceMutex = &sync.Mutex{}
+
 type IBroker interface {
 	IsSubscriptionConnection(net.Conn) bool
 	Subscribe(conn net.Conn, topic string)
@@ -22,10 +25,17 @@ type BrokerService struct {
 }
 
 func NewBrokerService() *BrokerService {
-	return &BrokerService{
-		clients:     map[net.Conn]string{},
-		subscribers: map[string][]net.Conn{},
+	if brokerServiceInstance == nil {
+		brokerServiceMutex.Lock()
+		defer brokerServiceMutex.Unlock()
+		if brokerServiceInstance == nil {
+			brokerServiceInstance = &BrokerService{
+				clients:     map[net.Conn]string{},
+				subscribers: map[string][]net.Conn{},
+			}
+		}
 	}
+	return brokerServiceInstance
 }
 
 func (m *BrokerService) IsSubscriptionConnection(conn net.Conn) bool {

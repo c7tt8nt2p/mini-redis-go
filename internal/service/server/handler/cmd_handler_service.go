@@ -65,7 +65,7 @@ func (s *CmdHandlerService) SetCmdHandler(conn net.Conn, cacheFolder string, mes
 		return err
 	} else {
 		_, _ = conn.Write([]byte("Set ok" + "\n"))
-		s.redisService.SetString(k, v)
+		s.redisService.Set(k, ba)
 		return nil
 	}
 }
