@@ -46,11 +46,11 @@ func NewCmdHandlerService() *CmdHandlerService {
 	return serverCmdHandlerServiceInstance
 }
 
-func (s *CmdHandlerService) ExitCmdHandler(addr string) {
+func (*CmdHandlerService) ExitCmdHandler(addr string) {
 	fmt.Println("bye", addr)
 }
 
-func (s *CmdHandlerService) PingCmdHandler(conn net.Conn) error {
+func (*CmdHandlerService) PingCmdHandler(conn net.Conn) error {
 	_, err := conn.Write([]byte("PONG\n"))
 	return err
 }
@@ -90,7 +90,7 @@ func (s *CmdHandlerService) SubscribeCmdHandler(conn net.Conn, message string) e
 	return err
 }
 
-func (s *CmdHandlerService) OtherCmdHandler(conn net.Conn, message string) error {
+func (*CmdHandlerService) OtherCmdHandler(conn net.Conn, message string) error {
 	_, err := conn.Write([]byte(message))
 	return err
 }

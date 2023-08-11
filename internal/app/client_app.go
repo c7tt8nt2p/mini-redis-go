@@ -46,10 +46,10 @@ func (c *ClientApp) handleMessageFromServer(handlerFunc func(messageFromServer s
 				if err == io.EOF || err == io.ErrUnexpectedEOF {
 					_ = c.clientService.GetConnection().Close()
 					os.Exit(0)
-				} else {
-					fmt.Println("Error reading server response:", err)
-					break
 				}
+				fmt.Println("Error reading server response:", err)
+				break
+
 			}
 			message := string(buffer[:n])
 
