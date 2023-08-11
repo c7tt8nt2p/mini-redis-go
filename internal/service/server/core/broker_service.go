@@ -8,6 +8,7 @@ import (
 var brokerServiceInstance *BrokerService
 var brokerServiceMutex = &sync.Mutex{}
 
+// IBroker is a service that handles pub/sub
 type IBroker interface {
 	IsSubscriptionConnection(net.Conn) bool
 	Subscribe(conn net.Conn, topic string)

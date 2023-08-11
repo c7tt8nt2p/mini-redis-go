@@ -11,6 +11,7 @@ import (
 var cacheReaderServiceInstance *CacheReaderService
 var cacheReaderServiceMutex = &sync.Mutex{}
 
+// ICacheReader is a service to read cache from files
 type ICacheReader interface {
 	ReadFromFile(cacheFolder string) map[string][]byte
 }

@@ -8,6 +8,7 @@ import (
 var redisServiceInstance *RedisService
 var redisServiceMutex = &sync.Mutex{}
 
+// IRedis is a Redis service itself
 type IRedis interface {
 	Get(key string) []byte
 	Set(key string, value []byte)

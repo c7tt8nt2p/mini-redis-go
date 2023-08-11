@@ -1,3 +1,4 @@
+// Package handler contains business logic of commands sent from a client
 package handler
 
 import (

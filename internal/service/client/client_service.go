@@ -1,3 +1,4 @@
+// Package client contains all business logic in server side
 package client
 
 import (
@@ -9,6 +10,7 @@ import (
 	"os"
 )
 
+// IClient this is a client API interface that contains functions that use can do and interact with the Redis
 type IClient interface {
 	Connect() *tls.Conn
 	GetConnection() *tls.Conn

@@ -1,3 +1,4 @@
+// Package server contains all business logic in server side
 package server
 
 import (

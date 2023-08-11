@@ -4,6 +4,8 @@ import (
 	"fmt"
 )
 
+// ISubscriber is a client API interface contains functions that user can interact with Redis
+// after a client has subscribed to a topic
 type ISubscriber interface {
 	NextMessage() (string, error)
 	Publish(message string) error

@@ -1,3 +1,4 @@
+// Package parser is a utils to parse a String command and translates ot extracts it as needed
 package parser
 
 import (

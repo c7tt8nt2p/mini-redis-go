@@ -9,6 +9,7 @@ import (
 var cacheWriterServiceInstance *CacheWriterService
 var cacheWriterServiceMutex = &sync.Mutex{}
 
+// ICacheWriter is a service to write cache to files
 type ICacheWriter interface {
 	WriteToFile(cacheFolder string, k string, v []byte) error
 }

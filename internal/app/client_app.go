@@ -9,6 +9,7 @@ import (
 	"os"
 )
 
+// IClientApp is an entrypoint when instantiating a new client
 type IClientApp interface {
 	ConnectToServer() *tls.Conn
 	// OnMessageReceivedFromServer register a function to handles messages from the server
