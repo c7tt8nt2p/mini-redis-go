@@ -6,15 +6,11 @@ import (
 	"sync"
 )
 
-var redisServiceInstance *RedisService
-var redisServiceMutex = &sync.Mutex{}
-
 type IRedis interface {
 	Get(key string) []byte
 	SetByteArray(key string, value []byte)
 	SetString(key string, value string)
 	SetInt(key string, value int)
-	//SetStruct(key string, value struct{})
 	Db() map[string][]byte
 	ExistsByKey(key string) bool
 	ReadCache(cacheFolder string)
@@ -32,37 +28,15 @@ type MyDb struct {
 	cache map[string][]byte
 }
 
-//var once sync.Once
-//
-//func GetMyRedis(cacheFolder, cacheFileName string) IRedis {
-//	once.Do(func() {
-//		db := MyDb{
-//			cache: map[string][]byte{},
-//		}
-//		instance = &myRedis{
-//			db:            &db,
-//			cacheFileName: filepath.Join(cacheFolder, cacheFileName),
-//		}
-//	})
-//	return instance
-//}
-
 func NewRedisService() *RedisService {
-	if redisServiceInstance == nil {
-		redisServiceMutex.Lock()
-		defer redisServiceMutex.Unlock()
-		if redisServiceInstance == nil {
-			db := MyDb{
-				cache: map[string][]byte{},
-			}
-			redisServiceInstance = &RedisService{
-				cacheReaderService: cache.NewCacheReaderService(),
-				cacheWriterService: cache.NewCacheWriterService(),
-				db:                 &db,
-			}
-		}
+	db := MyDb{
+		cache: map[string][]byte{},
 	}
-	return redisServiceInstance
+	return &RedisService{
+		cacheReaderService: cache.NewCacheReaderService(),
+		cacheWriterService: cache.NewCacheWriterService(),
+		db:                 &db,
+	}
 }
 
 func (r *RedisService) Get(key string) []byte {

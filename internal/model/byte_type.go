@@ -6,7 +6,6 @@ const (
 	Unknown ByteType = iota
 	StringByteType
 	IntByteType
-	StructByteType
 )
 
 func ExtractByteTypeAndValue(originalByteArray []byte) (ByteType, []byte) {

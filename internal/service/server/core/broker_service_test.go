@@ -1,12 +1,11 @@
 package core
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"mini-redis-go/internal/mock"
 	"net"
-	"reflect"
-	"sync"
 	"testing"
 )
 
@@ -26,148 +25,65 @@ func TestBrokerService_IsSubscriptionConnection(t *testing.T) {
 
 	assert.True(t, service.IsSubscriptionConnection(conn1))
 	assert.False(t, service.IsSubscriptionConnection(conn2))
-}
 
-func TestBrokerService_GetTopicFromConnection(t *testing.T) {
-	type fields struct {
-		mutex       sync.Mutex
-		clients     map[net.Conn]string
-		subscribers map[string][]net.Conn
-	}
-	type args struct {
-		conn net.Conn
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   string
-		want1  bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			m := &BrokerService{
-				mutex:       tt.fields.mutex,
-				clients:     tt.fields.clients,
-				subscribers: tt.fields.subscribers,
-			}
-			got, got1 := m.GetTopicFromConnection(tt.args.conn)
-			if got != tt.want {
-				t.Errorf("GetTopicFromConnection() got = %v, want %v", got, tt.want)
-			}
-			if got1 != tt.want1 {
-				t.Errorf("GetTopicFromConnection() got1 = %v, want %v", got1, tt.want1)
-			}
-		})
-	}
-}
-
-func TestBrokerService_Publish(t *testing.T) {
-	type fields struct {
-		mutex       sync.Mutex
-		clients     map[net.Conn]string
-		subscribers map[string][]net.Conn
-	}
-	type args struct {
-		conn    net.Conn
-		topic   string
-		message string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			m := &BrokerService{
-				mutex:       tt.fields.mutex,
-				clients:     tt.fields.clients,
-				subscribers: tt.fields.subscribers,
-			}
-			m.Publish(tt.args.conn, tt.args.topic, tt.args.message)
-		})
-	}
+	fmt.Println(service.clients)
 }
 
 func TestBrokerService_Subscribe(t *testing.T) {
-	type fields struct {
-		mutex       sync.Mutex
-		clients     map[net.Conn]string
-		subscribers map[string][]net.Conn
-	}
-	type args struct {
-		conn  net.Conn
-		topic string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			m := &BrokerService{
-				mutex:       tt.fields.mutex,
-				clients:     tt.fields.clients,
-				subscribers: tt.fields.subscribers,
-			}
-			m.Subscribe(tt.args.conn, tt.args.topic)
-		})
-	}
+	ctrl := gomock.NewController(t)
+	conn1 := mock.NewMockConn(ctrl)
+	conn2 := mock.NewMockConn(ctrl)
+	topic := "topicA"
+
+	service := NewBrokerService()
+	service.Subscribe(conn1, topic)
+
+	assert.Equal(t, 1, len(service.subscribers[topic]))
+	assert.ElementsMatch(t, []net.Conn{conn1}, service.subscribers[topic])
+
+	service.Subscribe(conn2, topic)
+	assert.Equal(t, 2, len(service.subscribers[topic]))
+	assert.ElementsMatch(t, []net.Conn{conn1, conn2}, service.subscribers[topic])
 }
 
 func TestBrokerService_Unsubscribe(t *testing.T) {
-	type fields struct {
-		mutex       sync.Mutex
-		clients     map[net.Conn]string
-		subscribers map[string][]net.Conn
-	}
-	type args struct {
-		conn net.Conn
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			m := &BrokerService{
-				mutex:       tt.fields.mutex,
-				clients:     tt.fields.clients,
-				subscribers: tt.fields.subscribers,
-			}
-			m.Unsubscribe(tt.args.conn)
-		})
-	}
+	ctrl := gomock.NewController(t)
+	conn := mock.NewMockConn(ctrl)
+	conn.EXPECT().Close().Times(1)
+	topic := "topicB"
+
+	service := NewBrokerService()
+	service.Subscribe(conn, topic)
+	service.Unsubscribe(conn)
+
+	assert.Equal(t, 0, len(service.subscribers[topic]))
+	_, exists := service.clients[conn]
+	assert.False(t, exists)
 }
 
-func Test_removeConnection(t *testing.T) {
-	type args struct {
-		conns []net.Conn
-		conn  net.Conn
-	}
-	tests := []struct {
-		name string
-		args args
-		want []net.Conn
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := removeConnection(tt.args.conns, tt.args.conn); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("removeConnection() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+func TestBrokerService_GetTopicFromConnection(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	conn := mock.NewMockConn(ctrl)
+	topic := "topicC"
+
+	service := NewBrokerService()
+	service.clients[conn] = topic
+
+	response, _ := service.GetTopicFromConnection(conn)
+	assert.Equal(t, topic, response)
+}
+
+func TestBrokerService_Publish(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	conn1 := mock.NewMockConn(ctrl)
+	conn2 := mock.NewMockConn(ctrl)
+	topic := "topicC"
+	message := "hello"
+	conn2.EXPECT().Write([]byte(message))
+
+	service := NewBrokerService()
+	service.Subscribe(conn1, topic)
+	service.Subscribe(conn2, topic)
+
+	service.Publish(conn1, topic, message)
 }

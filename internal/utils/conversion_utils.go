@@ -7,7 +7,7 @@ import (
 )
 
 type MyRedisValueType interface {
-	~[]byte | ~int | ~string | struct{}
+	~[]byte | ~int | ~string
 }
 
 // ToByteArray Convert a given value to byte array
@@ -29,8 +29,6 @@ func ToByteArray[T MyRedisValueType](t T) ([]byte, error) {
 	case reflect.String:
 		v := reflect.ValueOf(t).String()
 		return []byte(v), nil
-	case reflect.Struct:
-		return nil, nil
 	default:
 		return nil, errors.New("unsupported value type")
 	}
