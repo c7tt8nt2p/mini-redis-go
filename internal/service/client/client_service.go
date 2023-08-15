@@ -28,11 +28,11 @@ type ClientService struct {
 	conn           *tls.Conn
 }
 
-func NewClientService(host, port, publicKeyFile, privateKeyFile string) *ClientService {
+func NewClientService(clientConfig *config.ClientConfig) IClient {
 	return &ClientService{
-		addr:           host + ":" + port,
-		publicKeyFile:  publicKeyFile,
-		privateKeyFile: privateKeyFile,
+		addr:           clientConfig.ConnectionHost + ":" + clientConfig.ConnectionPort,
+		publicKeyFile:  clientConfig.ClientPublicKeyFile,
+		privateKeyFile: clientConfig.ClientPrivateKeyFile,
 	}
 }
 

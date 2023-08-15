@@ -18,8 +18,8 @@ func TestSubscribeAndPublish(t *testing.T) {
 	}(tempFolder)
 	s := utils.StartServer(config.ConnectionHost, config.ConnectionPort, tempFolder)
 	topic := "t1"
-	client1 := utils.ConnectToServer(config.ConnectionHost, config.ConnectionPort)
-	client2 := utils.ConnectToServer(config.ConnectionHost, config.ConnectionPort)
+	client1 := utils.ConnectToServer(utils.GetClientConfigTest())
+	client2 := utils.ConnectToServer(utils.GetClientConfigTest())
 
 	subscriber1 := client1.Subscribe(topic)
 	assert.Equal(t, "Subscribed\n", utils.Read(t, client1))

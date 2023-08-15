@@ -10,8 +10,18 @@ import (
 	"strings"
 )
 
+func GetClientConfig() *config.ClientConfig {
+	return &config.ClientConfig{
+		ClientPublicKeyFile:  "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/client/client.pem",
+		ClientPrivateKeyFile: "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/client/client.key",
+		ConnectionHost:       "localhost",
+		ConnectionPort:       "6973",
+	}
+}
+
 func main() {
-	clientService := client.NewClientService(config.ConnectionHost, config.ConnectionPort, config.ClientPublicKeyFile, config.ClientPrivateKeyFile)
+	clientConfig := GetClientConfig()
+	clientService := client.NewClientService(clientConfig)
 
 	myApp := app.NewClientApp(clientService)
 	conn := myApp.ConnectToServer()

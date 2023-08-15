@@ -13,8 +13,17 @@ func StartServer(host, port, cacheFolder string) server.IServer {
 	return s
 }
 
-func ConnectToServer(host, port string) client.IClient {
-	c := client.NewClientService(host, port, config.ClientPublicKeyFile, config.ClientPrivateKeyFile)
+func GetClientConfigTest() *config.ClientConfig {
+	return &config.ClientConfig{
+		ClientPublicKeyFile:  "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/client/client.pem",
+		ClientPrivateKeyFile: "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/client/client.key",
+		ConnectionHost:       "localhost",
+		ConnectionPort:       "6973",
+	}
+}
+
+func ConnectToServer(clientConfig *config.ClientConfig) client.IClient {
+	c := client.NewClientService(clientConfig)
 	c.Connect()
 	return c
 }
