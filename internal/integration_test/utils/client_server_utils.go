@@ -7,8 +7,9 @@ import (
 	"testing"
 )
 
-func StartServer(host, port, cacheFolder string) server.IServer {
-	s := server.NewServerService(host, port, cacheFolder)
+func StartServer(cacheFolder string) server.IServer {
+	serverConfig := GetServerConfigTest(cacheFolder)
+	s := server.NewServerService(serverConfig)
 	go s.Start()
 	return s
 }
@@ -19,6 +20,16 @@ func GetClientConfigTest() *config.ClientConfig {
 		ClientPrivateKeyFile: "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/client/client.key",
 		ConnectionHost:       "localhost",
 		ConnectionPort:       "6973",
+	}
+}
+
+func GetServerConfigTest(cacheFolder string) *config.ServerConfig {
+	return &config.ServerConfig{
+		ServerPublicKeyFile:  "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/server/server.pem",
+		ServerPrivateKeyFile: "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/server/server.key",
+		ConnectionHost:       "localhost",
+		ConnectionPort:       "6973",
+		CacheFolder:          cacheFolder,
 	}
 }
 

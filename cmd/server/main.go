@@ -1,14 +1,20 @@
 package main
 
 import (
-	"mini-redis-go/internal/app"
 	"mini-redis-go/internal/config"
-	"mini-redis-go/internal/service/server"
 )
 
-func main() {
-	serverService := server.NewServerService(config.ConnectionHost, config.ConnectionPort, config.CacheFolder)
+func GetServerConfig() *config.ServerConfig {
+	return &config.ServerConfig{
+		ServerPublicKeyFile:  "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/server/server.pem",
+		ServerPrivateKeyFile: "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/server/server.key",
+		ConnectionHost:       "localhost",
+		ConnectionPort:       "6973",
+		CacheFolder:          "/Users/chantapat.t/GolandProjects/mini-redis-go/cache",
+	}
+}
 
-	myApp := app.NewServerApp(serverService)
+func main() {
+	myApp := InitializeServer()
 	myApp.StartServer()
 }

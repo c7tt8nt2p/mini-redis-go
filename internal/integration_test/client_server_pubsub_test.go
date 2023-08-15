@@ -4,7 +4,6 @@ package integration_test
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
-	"mini-redis-go/internal/config"
 	"mini-redis-go/internal/integration_test/utils"
 	"mini-redis-go/internal/test_utils"
 	"os"
@@ -16,7 +15,7 @@ func TestSubscribeAndPublish(t *testing.T) {
 	defer func(path string) {
 		_ = os.RemoveAll(path)
 	}(tempFolder)
-	s := utils.StartServer(config.ConnectionHost, config.ConnectionPort, tempFolder)
+	s := utils.StartServer(tempFolder)
 	topic := "t1"
 	client1 := utils.ConnectToServer(utils.GetClientConfigTest())
 	client2 := utils.ConnectToServer(utils.GetClientConfigTest())

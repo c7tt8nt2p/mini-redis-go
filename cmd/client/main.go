@@ -3,9 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"fmt"
-	"mini-redis-go/internal/app"
 	"mini-redis-go/internal/config"
-	"mini-redis-go/internal/service/client"
 	"os"
 	"strings"
 )
@@ -20,10 +18,7 @@ func GetClientConfig() *config.ClientConfig {
 }
 
 func main() {
-	clientConfig := GetClientConfig()
-	clientService := client.NewClientService(clientConfig)
-
-	myApp := app.NewClientApp(clientService)
+	myApp := InitializeClient()
 	conn := myApp.ConnectToServer()
 	defer func(connection *tls.Conn) {
 		err := connection.Close()

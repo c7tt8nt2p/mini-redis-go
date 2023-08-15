@@ -27,6 +27,7 @@ type IServer interface {
 }
 
 type ServerService struct {
+	config            *config.ServerConfig
 	redisService      core.IRedis
 	brokerService     core.IBroker
 	cmdHandlerService handler.ICmdHandler
@@ -36,17 +37,18 @@ type ServerService struct {
 	stopSignal        chan bool
 }
 
-func NewServerService(host, port, cacheFolder string) *ServerService {
+func NewServerService(serverConfig *config.ServerConfig) IServer {
 	if serverServiceInstance == nil {
 		serverServiceMutex.Lock()
 		defer serverServiceMutex.Unlock()
 		if serverServiceInstance == nil {
 			instance := &ServerService{
+				config:            serverConfig,
 				redisService:      core.NewRedisService(),
 				brokerService:     core.NewBrokerService(),
 				cmdHandlerService: handler.NewCmdHandlerService(),
-				Addr:              host + ":" + port,
-				cacheFolder:       cacheFolder,
+				Addr:              serverConfig.ConnectionHost + ":" + serverConfig.ConnectionPort,
+				cacheFolder:       serverConfig.CacheFolder,
 				stopSignal:        make(chan bool, 1),
 			}
 			serverServiceInstance = instance
@@ -56,7 +58,7 @@ func NewServerService(host, port, cacheFolder string) *ServerService {
 }
 
 func (s *ServerService) Start() {
-	cert := utils.LoadCertificate(config.ServerPublicKeyFile, config.ServerPrivateKeyFile)
+	cert := utils.LoadCertificate(s.config.ServerPublicKeyFile, s.config.ServerPrivateKeyFile)
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{*cert},
 		ClientAuth:   tls.RequireAnyClientCert,

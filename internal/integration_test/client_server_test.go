@@ -2,7 +2,6 @@ package integration_test
 
 import (
 	"github.com/stretchr/testify/assert"
-	"mini-redis-go/internal/config"
 	"mini-redis-go/internal/integration_test/utils"
 	"mini-redis-go/internal/model"
 	"mini-redis-go/internal/test_utils"
@@ -15,7 +14,7 @@ func TestPingPong(t *testing.T) {
 	defer func(path string) {
 		_ = os.RemoveAll(path)
 	}(tempFolder)
-	s := utils.StartServer(config.ConnectionHost, config.ConnectionPort, tempFolder)
+	s := utils.StartServer(tempFolder)
 	s.SetCacheFolder(tempFolder)
 	c := utils.ConnectToServer(utils.GetClientConfigTest())
 
@@ -31,7 +30,7 @@ func TestSetAndGet(t *testing.T) {
 	defer func(path string) {
 		_ = os.RemoveAll(path)
 	}(tempFolder)
-	s := utils.StartServer(config.ConnectionHost, config.ConnectionPort, tempFolder)
+	s := utils.StartServer(tempFolder)
 	s.SetCacheFolder(tempFolder)
 	c := utils.ConnectToServer(utils.GetClientConfigTest())
 
@@ -51,7 +50,7 @@ func TestCache(t *testing.T) {
 		_ = os.RemoveAll(path)
 	}(tempFolder)
 	test_utils.CreateFileWithData(tempFolder, "testKey", append([]byte{byte(model.StringByteType)}, []byte("tesValue")...))
-	s := utils.StartServer(config.ConnectionHost, config.ConnectionPort, tempFolder)
+	s := utils.StartServer(tempFolder)
 	s.SetCacheFolder(tempFolder)
 	c := utils.ConnectToServer(utils.GetClientConfigTest())
 
