@@ -62,8 +62,8 @@ func (m *BrokerService) Unsubscribe(conn net.Conn) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	topic, hasPreviouslySubscribed := m.clients[conn]
-	if hasPreviouslySubscribed {
+	topic, exists := m.clients[conn]
+	if exists {
 		updatedSubscriber := removeConnection(m.subscribers[topic], conn)
 		m.subscribers[topic] = updatedSubscriber
 		delete(m.clients, conn)

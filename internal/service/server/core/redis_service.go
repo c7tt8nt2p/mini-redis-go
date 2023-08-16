@@ -24,8 +24,8 @@ type RedisService struct {
 }
 
 type MyDb struct {
-	mutex sync.Mutex
-	cache map[string][]byte
+	rwMutex sync.RWMutex
+	cache   map[string][]byte
 }
 
 //var once sync.Once
@@ -62,18 +62,22 @@ func NewRedisService() *RedisService {
 }
 
 func (r *RedisService) Get(key string) []byte {
+	r.db.rwMutex.RLock()
+	defer r.db.rwMutex.RUnlock()
 	bytes := r.db.cache[key]
 	return bytes
 }
 
 func (r *RedisService) Set(key string, value []byte) {
-	r.db.mutex.Lock()
-	defer r.db.mutex.Unlock()
+	r.db.rwMutex.Lock()
+	defer r.db.rwMutex.Unlock()
 
 	r.db.cache[key] = value
 }
 
 func (r *RedisService) ExistsByKey(key string) bool {
+	r.db.rwMutex.RLock()
+	defer r.db.rwMutex.RUnlock()
 	_, exists := r.db.cache[key]
 	return exists
 }

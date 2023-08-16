@@ -54,7 +54,6 @@ func TestCache(t *testing.T) {
 	defer s.Stop()
 	s.SetCacheFolder(tempFolder)
 	c := utils.ConnectToServer(utils.GetClientConfigTest())
-
 	response := utils.Get(t, c, "testKey")
 	assert.Equal(t, "tesValue\n", response)
 }
