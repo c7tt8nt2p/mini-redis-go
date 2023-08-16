@@ -17,7 +17,6 @@ func TestPingPong(t *testing.T) {
 	s := utils.StartServer(tempFolder)
 	defer s.Stop()
 
-	s.SetCacheFolder(tempFolder)
 	c := utils.ConnectToServer(utils.GetClientConfigTest())
 
 	utils.Write(t, c, []byte("PING\n"))
@@ -33,7 +32,6 @@ func TestSetAndGet(t *testing.T) {
 	s := utils.StartServer(tempFolder)
 	defer s.Stop()
 
-	s.SetCacheFolder(tempFolder)
 	c := utils.ConnectToServer(utils.GetClientConfigTest())
 
 	utils.Set(t, c, "hello", "world")
@@ -52,7 +50,6 @@ func TestCache(t *testing.T) {
 	test_utils.CreateFileWithData(tempFolder, "testKey", append([]byte{byte(model.StringByteType)}, []byte("tesValue")...))
 	s := utils.StartServer(tempFolder)
 	defer s.Stop()
-	s.SetCacheFolder(tempFolder)
 	c := utils.ConnectToServer(utils.GetClientConfigTest())
 	response := utils.Get(t, c, "testKey")
 	assert.Equal(t, "tesValue\n", response)

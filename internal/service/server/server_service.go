@@ -13,11 +13,7 @@ import (
 	"mini-redis-go/internal/service/server/parser"
 	"mini-redis-go/internal/utils"
 	"net"
-	"sync"
 )
-
-var serverServiceInstance *ServerService
-var serverServiceMutex = &sync.Mutex{}
 
 type IServer interface {
 	Start()
@@ -38,23 +34,15 @@ type ServerService struct {
 }
 
 func NewServerService(serverConfig *config.ServerConfig) IServer {
-	if serverServiceInstance == nil {
-		serverServiceMutex.Lock()
-		defer serverServiceMutex.Unlock()
-		if serverServiceInstance == nil {
-			instance := &ServerService{
-				config:            serverConfig,
-				redisService:      core.NewRedisService(),
-				brokerService:     core.NewBrokerService(),
-				cmdHandlerService: handler.NewCmdHandlerService(),
-				Addr:              serverConfig.Host + ":" + serverConfig.Port,
-				cacheFolder:       serverConfig.CacheFolder,
-				stopSignal:        make(chan struct{}),
-			}
-			serverServiceInstance = instance
-		}
+	return &ServerService{
+		config:            serverConfig,
+		redisService:      core.NewRedisService(),
+		brokerService:     core.NewBrokerService(),
+		cmdHandlerService: handler.NewCmdHandlerService(),
+		Addr:              serverConfig.Host + ":" + serverConfig.Port,
+		cacheFolder:       serverConfig.CacheFolder,
+		stopSignal:        make(chan struct{}),
 	}
-	return serverServiceInstance
 }
 
 func (s *ServerService) Start() {
