@@ -32,14 +32,14 @@ type ClientService struct {
 func NewClientService(clientConfig *config.ClientConfig) IClient {
 	return &ClientService{
 		config:         clientConfig,
-		addr:           clientConfig.ConnectionHost + ":" + clientConfig.ConnectionPort,
-		publicKeyFile:  clientConfig.ClientPublicKeyFile,
-		privateKeyFile: clientConfig.ClientPrivateKeyFile,
+		addr:           clientConfig.Host + ":" + clientConfig.Port,
+		publicKeyFile:  clientConfig.PublicKeyFile,
+		privateKeyFile: clientConfig.PrivateKeyFile,
 	}
 }
 
 func (c *ClientService) Connect() *tls.Conn {
-	cert := utils.LoadCertificate(c.config.ClientPublicKeyFile, c.config.ClientPrivateKeyFile)
+	cert := utils.LoadCertificate(c.config.PublicKeyFile, c.config.PrivateKeyFile)
 	tlsConfig := &tls.Config{
 		Certificates:       []tls.Certificate{*cert},
 		InsecureSkipVerify: true,

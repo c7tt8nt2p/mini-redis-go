@@ -47,7 +47,7 @@ func NewServerService(serverConfig *config.ServerConfig) IServer {
 				redisService:      core.NewRedisService(),
 				brokerService:     core.NewBrokerService(),
 				cmdHandlerService: handler.NewCmdHandlerService(),
-				Addr:              serverConfig.ConnectionHost + ":" + serverConfig.ConnectionPort,
+				Addr:              serverConfig.Host + ":" + serverConfig.Port,
 				cacheFolder:       serverConfig.CacheFolder,
 				stopSignal:        make(chan bool, 1),
 			}
@@ -58,7 +58,7 @@ func NewServerService(serverConfig *config.ServerConfig) IServer {
 }
 
 func (s *ServerService) Start() {
-	cert := utils.LoadCertificate(s.config.ServerPublicKeyFile, s.config.ServerPrivateKeyFile)
+	cert := utils.LoadCertificate(s.config.PublicKeyFile, s.config.PrivateKeyFile)
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{*cert},
 		ClientAuth:   tls.RequireAnyClientCert,

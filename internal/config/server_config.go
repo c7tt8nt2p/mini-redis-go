@@ -1,9 +1,9 @@
 package config
 
 type ServerConfig struct {
-	ServerPublicKeyFile  string
-	ServerPrivateKeyFile string
-	ConnectionHost       string
-	ConnectionPort       string
-	CacheFolder          string
+	PublicKeyFile  string
+	PrivateKeyFile string
+	Host           string
+	Port           string
+	CacheFolder    string
 }

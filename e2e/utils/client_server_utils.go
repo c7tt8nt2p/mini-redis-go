@@ -16,20 +16,20 @@ func StartServer(cacheFolder string) server.IServer {
 
 func GetClientConfigTest() *config.ClientConfig {
 	return &config.ClientConfig{
-		ClientPublicKeyFile:  "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/client/client.pem",
-		ClientPrivateKeyFile: "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/client/client.key",
-		ConnectionHost:       "localhost",
-		ConnectionPort:       "6973",
+		PublicKeyFile:  "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/client/client.pem",
+		PrivateKeyFile: "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/client/client.key",
+		Host:           "localhost",
+		Port:           "6973",
 	}
 }
 
 func GetServerConfigTest(cacheFolder string) *config.ServerConfig {
 	return &config.ServerConfig{
-		ServerPublicKeyFile:  "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/server/server.pem",
-		ServerPrivateKeyFile: "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/server/server.key",
-		ConnectionHost:       "localhost",
-		ConnectionPort:       "6973",
-		CacheFolder:          cacheFolder,
+		PublicKeyFile:  "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/server/server.pem",
+		PrivateKeyFile: "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/server/server.key",
+		Host:           "localhost",
+		Port:           "6973",
+		CacheFolder:    cacheFolder,
 	}
 }
 

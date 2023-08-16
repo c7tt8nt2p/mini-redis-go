@@ -2,18 +2,32 @@ package main
 
 import (
 	"crypto/tls"
+	"flag"
 	"fmt"
 	"mini-redis-go/internal/config"
 	"os"
 	"strings"
 )
 
+const (
+	defaultPublicKeyFile  = "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/client/client.pem"
+	defaultPrivateKeyFile = "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/client/client.key"
+	defaultHost           = "localhost"
+	defaultPort           = "6973"
+)
+
 func GetClientConfig() *config.ClientConfig {
+	publicKeyFile := flag.String("publickey", defaultPublicKeyFile, "a client public key file")
+	privateKeyFile := flag.String("privatekey", defaultPrivateKeyFile, "a client private key file")
+	hostFlag := flag.String("host", defaultHost, "a connection host to connect to")
+	portFlag := flag.String("port", defaultPort, "a connection port to connect to")
+	flag.Parse()
+
 	return &config.ClientConfig{
-		ClientPublicKeyFile:  "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/client/client.pem",
-		ClientPrivateKeyFile: "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/client/client.key",
-		ConnectionHost:       "localhost",
-		ConnectionPort:       "6973",
+		PublicKeyFile:  *publicKeyFile,
+		PrivateKeyFile: *privateKeyFile,
+		Host:           *hostFlag,
+		Port:           *portFlag,
 	}
 }
 
