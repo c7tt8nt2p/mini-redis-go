@@ -2,13 +2,13 @@ test:
 	go test -v ./...
 
 test-integration:
-	go test -v ./internal/integration_test/...
+	go test -v ./e2e/...
 
 test-coverage:
 	gocov test \
+	  	./e2e/... \
         ./internal/app/... \
         ./internal/config/... \
-        ./internal/integration_test/... \
         ./internal/model/... \
         ./internal/service/... \
         ./internal/utils/... \

@@ -1,8 +1,8 @@
-package integration_test
+package e2e_test
 
 import (
 	"github.com/stretchr/testify/assert"
-	"mini-redis-go/internal/integration_test/utils"
+	"mini-redis-go/e2e/utils"
 	"mini-redis-go/internal/model"
 	"mini-redis-go/internal/test_utils"
 	"os"
