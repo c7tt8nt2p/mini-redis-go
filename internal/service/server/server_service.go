@@ -34,7 +34,7 @@ type ServerService struct {
 	listener          *net.Listener
 	Addr              string
 	cacheFolder       string
-	stopSignal        chan bool
+	stopSignal        chan struct{}
 }
 
 func NewServerService(serverConfig *config.ServerConfig) IServer {
@@ -49,7 +49,7 @@ func NewServerService(serverConfig *config.ServerConfig) IServer {
 				cmdHandlerService: handler.NewCmdHandlerService(),
 				Addr:              serverConfig.Host + ":" + serverConfig.Port,
 				cacheFolder:       serverConfig.CacheFolder,
-				stopSignal:        make(chan bool, 1),
+				stopSignal:        make(chan struct{}),
 			}
 			serverServiceInstance = instance
 		}
@@ -83,11 +83,9 @@ func (s *ServerService) listen(listener net.Listener) {
 	log.Println("================================================================================================")
 	log.Println("server is ready...")
 	go func() {
-		stop := <-s.stopSignal
-		if stop {
-			fmt.Println("Stopping the server...")
-			_ = (*s.listener).Close()
-		}
+		<-s.stopSignal
+		fmt.Println("Stopping the server...")
+		_ = (*s.listener).Close()
 	}()
 
 	for {
@@ -101,7 +99,7 @@ func (s *ServerService) listen(listener net.Listener) {
 }
 
 func (s *ServerService) Stop() {
-	s.stopSignal <- true
+	s.stopSignal <- struct{}{}
 }
 
 func (s *ServerService) GetCacheFolder() string {

@@ -16,6 +16,8 @@ func TestSubscribeAndPublish(t *testing.T) {
 		_ = os.RemoveAll(path)
 	}(tempFolder)
 	s := utils.StartServer(tempFolder)
+	defer s.Stop()
+
 	topic := "t1"
 	client1 := utils.ConnectToServer(utils.GetClientConfigTest())
 	client2 := utils.ConnectToServer(utils.GetClientConfigTest())
@@ -43,6 +45,4 @@ func TestSubscribeAndPublish(t *testing.T) {
 	assert.Equal(t,
 		fmt.Sprintf("%s has left.", client1.GetConnection().LocalAddr()),
 		utils.NextMessage(t, subscriber2))
-
-	s.Stop()
 }
