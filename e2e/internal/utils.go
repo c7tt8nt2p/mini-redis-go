@@ -1,4 +1,4 @@
-package utils
+package internal
 
 import (
 	"mini-redis-go/internal/config"

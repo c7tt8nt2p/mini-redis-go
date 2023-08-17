@@ -90,11 +90,9 @@ func TestCmdHandlerService_SubscribeCmdHandler(t *testing.T) {
 
 	conn := mock.NewMockConn(ctrl)
 	conn.EXPECT().Write([]byte("Subscribed\n")).Times(1).Return(0, nil)
-	conn.EXPECT().RemoteAddr().Times(1)
 
 	brokerService := mock.NewMockIBroker(ctrl)
 	brokerService.EXPECT().Subscribe(conn, "t1").Times(1)
-	brokerService.EXPECT().Publish(conn, "t1", gomock.Any()).Times(1)
 
 	service := NewCmdHandlerServiceInstance(mock.NewMockIRedis(ctrl), brokerService)
 	response := service.SubscribeCmdHandler(conn, message)
@@ -117,13 +115,11 @@ func TestCmdHandlerService_OtherCmdHandler(t *testing.T) {
 func TestCmdHandlerService_UnsubscribeCmdHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	conn := mock.NewMockConn(ctrl)
-	conn.EXPECT().RemoteAddr().Times(1)
 	topic := "t2"
 
 	brokerService := mock.NewMockIBroker(ctrl)
 	brokerService.EXPECT().GetTopicFromConnection(conn).Times(1).Return(topic, true)
 	brokerService.EXPECT().Unsubscribe(conn).Times(1)
-	brokerService.EXPECT().Publish(conn, topic, gomock.Any()).Times(1)
 
 	service := NewCmdHandlerServiceInstance(mock.NewMockIRedis(ctrl), brokerService)
 	service.UnsubscribeCmdHandler(conn)

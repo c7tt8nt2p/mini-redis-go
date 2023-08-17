@@ -2,9 +2,8 @@
 package e2e_test
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
-	"mini-redis-go/e2e/utils"
+	"mini-redis-go/e2e/internal"
 	"mini-redis-go/internal/test_utils"
 	"os"
 	"testing"
@@ -15,34 +14,27 @@ func TestSubscribeAndPublish(t *testing.T) {
 	defer func(path string) {
 		_ = os.RemoveAll(path)
 	}(tempFolder)
-	s := utils.StartServer(tempFolder)
+	s := internal.StartServer(tempFolder)
 	defer s.Stop()
 
 	topic := "t1"
-	client1 := utils.ConnectToServer(utils.GetClientConfigTest())
-	client2 := utils.ConnectToServer(utils.GetClientConfigTest())
+	client1 := internal.ConnectToServer(internal.GetClientConfigTest())
+	client2 := internal.ConnectToServer(internal.GetClientConfigTest())
 
 	subscriber1 := client1.Subscribe(topic)
-	assert.Equal(t, "Subscribed\n", utils.Read(t, client1))
+	assert.Equal(t, "Subscribed\n", internal.Read(t, client1))
 
 	subscriber2 := client2.Subscribe(topic)
-	assert.Equal(t, "Subscribed\n", utils.Read(t, client2))
-
-	assert.Equal(t,
-		fmt.Sprintf("%s has joined us.", client2.GetConnection().LocalAddr()),
-		utils.NextMessage(t, subscriber1))
+	assert.Equal(t, "Subscribed\n", internal.Read(t, client2))
 
 	// subscriber1 publishes
-	utils.Publish(t, subscriber1, "Hello I'm client1")
-	assert.Equal(t, "Hello I'm client1\n", utils.NextMessage(t, subscriber2))
+	internal.Publish(t, subscriber1, "Hello I'm client1")
+	assert.Equal(t, "Hello I'm client1\n", internal.NextMessage(t, subscriber2))
 
 	// subscriber2 publishes
-	utils.Publish(t, subscriber2, "Hello there")
-	assert.Equal(t, "Hello there\n", utils.NextMessage(t, subscriber1))
+	internal.Publish(t, subscriber2, "Hello there")
+	assert.Equal(t, "Hello there\n", internal.NextMessage(t, subscriber1))
 
 	// subscriber1 unsubscribes
-	utils.Unsubscribe(t, subscriber1)
-	assert.Equal(t,
-		fmt.Sprintf("%s has left.", client1.GetConnection().LocalAddr()),
-		utils.NextMessage(t, subscriber2))
+	internal.Unsubscribe(t, subscriber1)
 }

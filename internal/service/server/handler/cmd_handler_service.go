@@ -83,9 +83,6 @@ func (s *CmdHandlerService) SubscribeCmdHandler(conn net.Conn, message string) e
 	topic := parser.ExtractSubscribeCmd(message)
 	s.brokerService.Subscribe(conn, topic)
 
-	joinedMsg := fmt.Sprintf("%s has joined us.", conn.RemoteAddr())
-	s.brokerService.Publish(conn, topic, joinedMsg)
-
 	_, err := conn.Write([]byte("Subscribed\n"))
 	return err
 }
@@ -102,12 +99,9 @@ func appendByteTypeToFront(originalByteArray []byte, byteType model.ByteType) []
 }
 
 func (s *CmdHandlerService) UnsubscribeCmdHandler(conn net.Conn) {
-	topic, exists := s.brokerService.GetTopicFromConnection(conn)
+	_, exists := s.brokerService.GetTopicFromConnection(conn)
 	if exists {
 		s.brokerService.Unsubscribe(conn)
-
-		leftMsg := fmt.Sprintf("%s has left.", conn.RemoteAddr())
-		s.brokerService.Publish(conn, topic, leftMsg)
 	}
 }
 
