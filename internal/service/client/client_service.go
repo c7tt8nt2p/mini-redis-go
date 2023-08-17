@@ -94,6 +94,6 @@ func (c *clientService) Subscribe(topic string) ISubscriber {
 	utils.WriteToServer(c.conn, msg)
 
 	return &Subscriber{
-		c: c,
+		clientService: c,
 	}
 }

@@ -13,19 +13,19 @@ type ISubscriber interface {
 }
 
 type Subscriber struct {
-	c *clientService
+	clientService *clientService
 }
 
 func (s *Subscriber) NextMessage() (string, error) {
-	return s.c.Read()
+	return s.clientService.Read()
 }
 
 func (s *Subscriber) Publish(message string) error {
 	msg := fmt.Sprintf("%s\n", message)
-	return s.c.Write([]byte(msg))
+	return s.clientService.Write([]byte(msg))
 }
 
 func (s *Subscriber) Unsubscribe() error {
 	msg := "unsubscribe\n"
-	return s.c.Write([]byte(msg))
+	return s.clientService.Write([]byte(msg))
 }

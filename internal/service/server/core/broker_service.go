@@ -38,8 +38,8 @@ func (m *brokerService) Subscribe(conn net.Conn, topic string) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	v, keyExists := m.subscribers[topic]
-	if keyExists {
+	v, exists := m.subscribers[topic]
+	if exists {
 		v := append(v, conn)
 		m.subscribers[topic] = v
 	} else {
