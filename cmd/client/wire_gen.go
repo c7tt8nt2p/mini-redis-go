@@ -15,7 +15,7 @@ import (
 
 func InitializeClient() *app.ClientApp {
 	clientConfig := GetClientConfig()
-	iClient := client.NewClientService(clientConfig)
-	clientApp := app.NewClientApp(iClient)
+	clientService := client.NewClientService(clientConfig)
+	clientApp := app.NewClientApp(clientService)
 	return clientApp
 }

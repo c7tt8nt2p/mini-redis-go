@@ -10,8 +10,8 @@ import (
 	"os"
 )
 
-// IClientApp is an entrypoint when instantiating a new client
-type IClientApp interface {
+// Client is an entrypoint when instantiating a new client
+type Client interface {
 	ConnectToServer() *tls.Conn
 	// OnMessageReceivedFromServer register a function to handles messages from the server
 	OnMessageReceivedFromServer(handlerFunc func(messageFromServer string))

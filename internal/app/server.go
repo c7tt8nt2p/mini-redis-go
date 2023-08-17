@@ -2,8 +2,8 @@ package app
 
 import "mini-redis-go/internal/service/server"
 
-// IServerApp is an entrypoint when instantiating a new server
-type IServerApp interface {
+// Server is an entrypoint when instantiating a new server
+type Server interface {
 	StartServer()
 }
 
