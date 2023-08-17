@@ -5,32 +5,21 @@ import (
 	"mini-redis-go/internal/model"
 	"os"
 	"path/filepath"
-	"sync"
 )
 
-var cacheReaderServiceInstance *CacheReaderService
-var cacheReaderServiceMutex = &sync.Mutex{}
-
-// ICacheReader is a service to read cache from files
-type ICacheReader interface {
+// CacheReaderService is a service to read cache from files
+type CacheReaderService interface {
 	ReadFromFile(cacheFolder string) map[string][]byte
 }
 
-type CacheReaderService struct {
+type cacheReaderService struct {
 }
 
-func NewCacheReaderService() *CacheReaderService {
-	if cacheReaderServiceInstance == nil {
-		cacheReaderServiceMutex.Lock()
-		defer cacheReaderServiceMutex.Unlock()
-		if cacheReaderServiceInstance == nil {
-			cacheReaderServiceInstance = &CacheReaderService{}
-		}
-	}
-	return cacheReaderServiceInstance
+func NewCacheReaderService() *cacheReaderService {
+	return &cacheReaderService{}
 }
 
-func (*CacheReaderService) ReadFromFile(cacheFolder string) map[string][]byte {
+func (*cacheReaderService) ReadFromFile(cacheFolder string) map[string][]byte {
 	log.Println("reading cache... from", cacheFolder)
 
 	cache := map[string][]byte{}
@@ -60,6 +49,6 @@ func readCacheFromFile(cacheFilePath string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, extractedDate := model.ExtractByteTypeAndValue(data)
-	return extractedDate, nil
+	_, extractedData := model.ExtractByteTypeAndValue(data)
+	return extractedData, nil
 }

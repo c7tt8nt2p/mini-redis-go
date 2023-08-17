@@ -8,13 +8,9 @@ import (
 	"mini-redis-go/internal/service/server/parser"
 	"mini-redis-go/internal/utils"
 	"net"
-	"sync"
 )
 
-var serverCmdHandlerServiceInstance *CmdHandlerService
-var serverCmdHandlerServiceMutex = &sync.Mutex{}
-
-type ICmdHandler interface {
+type CmdHandlerService interface {
 	ExitCmdHandler(addr string)
 	PingCmdHandler(net.Conn) error
 	SetCmdHandler(conn net.Conn, cacheFolder string, message string) error
@@ -26,36 +22,28 @@ type ICmdHandler interface {
 	PublishCmdHandler(conn net.Conn, message string)
 }
 
-type CmdHandlerService struct {
-	redisService  core.IRedis
-	brokerService core.IBroker
+type cmdHandlerService struct {
+	redisService  core.RedisService
+	brokerService core.BrokerService
 }
 
-func NewCmdHandlerService() *CmdHandlerService {
-	if serverCmdHandlerServiceInstance == nil {
-		serverCmdHandlerServiceMutex.Lock()
-		defer serverCmdHandlerServiceMutex.Unlock()
-		if serverCmdHandlerServiceInstance == nil {
-			instance := &CmdHandlerService{
-				redisService:  core.NewRedisService(),
-				brokerService: core.NewBrokerService(),
-			}
-			serverCmdHandlerServiceInstance = instance
-		}
+func NewCmdHandlerService(redisService core.RedisService, brokerService core.BrokerService) *cmdHandlerService {
+	return &cmdHandlerService{
+		redisService:  redisService,
+		brokerService: brokerService,
 	}
-	return serverCmdHandlerServiceInstance
 }
 
-func (*CmdHandlerService) ExitCmdHandler(addr string) {
+func (*cmdHandlerService) ExitCmdHandler(addr string) {
 	fmt.Println("bye", addr)
 }
 
-func (*CmdHandlerService) PingCmdHandler(conn net.Conn) error {
+func (*cmdHandlerService) PingCmdHandler(conn net.Conn) error {
 	_, err := conn.Write([]byte("PONG\n"))
 	return err
 }
 
-func (s *CmdHandlerService) SetCmdHandler(conn net.Conn, cacheFolder string, message string) error {
+func (s *cmdHandlerService) SetCmdHandler(conn net.Conn, cacheFolder string, message string) error {
 	k, v := parser.ExtractSetCmd(message)
 
 	ba, _ := utils.ToByteArray(v)
@@ -71,7 +59,7 @@ func (s *CmdHandlerService) SetCmdHandler(conn net.Conn, cacheFolder string, mes
 	}
 }
 
-func (s *CmdHandlerService) GetCmdHandler(conn net.Conn, message string) error {
+func (s *cmdHandlerService) GetCmdHandler(conn net.Conn, message string) error {
 	k := parser.ExtractGetCmd(message)
 	v := s.redisService.Get(k)
 
@@ -79,7 +67,7 @@ func (s *CmdHandlerService) GetCmdHandler(conn net.Conn, message string) error {
 	return err
 }
 
-func (s *CmdHandlerService) SubscribeCmdHandler(conn net.Conn, message string) error {
+func (s *cmdHandlerService) SubscribeCmdHandler(conn net.Conn, message string) error {
 	topic := parser.ExtractSubscribeCmd(message)
 	s.brokerService.Subscribe(conn, topic)
 
@@ -87,7 +75,7 @@ func (s *CmdHandlerService) SubscribeCmdHandler(conn net.Conn, message string) e
 	return err
 }
 
-func (*CmdHandlerService) OtherCmdHandler(conn net.Conn, message string) error {
+func (*cmdHandlerService) OtherCmdHandler(conn net.Conn, message string) error {
 	_, err := conn.Write([]byte(message))
 	return err
 }
@@ -98,14 +86,14 @@ func appendByteTypeToFront(originalByteArray []byte, byteType model.ByteType) []
 	return newByteArray
 }
 
-func (s *CmdHandlerService) UnsubscribeCmdHandler(conn net.Conn) {
+func (s *cmdHandlerService) UnsubscribeCmdHandler(conn net.Conn) {
 	_, exists := s.brokerService.GetTopicFromConnection(conn)
 	if exists {
 		s.brokerService.Unsubscribe(conn)
 	}
 }
 
-func (s *CmdHandlerService) PublishCmdHandler(conn net.Conn, message string) {
+func (s *cmdHandlerService) PublishCmdHandler(conn net.Conn, message string) {
 	topic, exists := s.brokerService.GetTopicFromConnection(conn)
 	if exists {
 		s.brokerService.Publish(conn, topic, message)

@@ -33,19 +33,19 @@ func GetServerConfigTest(cacheFolder string) *config.ServerConfig {
 	}
 }
 
-func ConnectToServer(clientConfig *config.ClientConfig) client.IClient {
+func ConnectToServer(clientConfig *config.ClientConfig) client.ClientService {
 	c := client.NewClientService(clientConfig)
 	c.Connect()
 	return c
 }
 
-func Set(t *testing.T, c client.IClient, k string, v string) {
+func Set(t *testing.T, c client.ClientService, k string, v string) {
 	if err := c.Set(k, v); err != nil {
 		t.Error("Error set", err)
 	}
 }
 
-func Get(t *testing.T, c client.IClient, k string) string {
+func Get(t *testing.T, c client.ClientService, k string) string {
 	response, err := c.Get(k)
 	if err != nil {
 		t.Error("Error get", err)
@@ -53,13 +53,13 @@ func Get(t *testing.T, c client.IClient, k string) string {
 	return response
 }
 
-func Write(t *testing.T, c client.IClient, message []byte) {
+func Write(t *testing.T, c client.ClientService, message []byte) {
 	if err := c.Write(message); err != nil {
 		t.Error("Error sending a message", err)
 	}
 }
 
-func Read(t *testing.T, c client.IClient) string {
+func Read(t *testing.T, c client.ClientService) string {
 	response, err := c.Read()
 	if err != nil {
 		t.Error("Error reading from server", err)

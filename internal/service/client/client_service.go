@@ -10,8 +10,8 @@ import (
 	"os"
 )
 
-// IClient this is a client API interface that contains functions that use can do and interact with the Redis
-type IClient interface {
+// ClientService this is a client API interface that contains functions that use can do and interact with the Redis
+type ClientService interface {
 	Connect() *tls.Conn
 	GetConnection() *tls.Conn
 	Set(k string, v string) error
@@ -21,7 +21,7 @@ type IClient interface {
 	Subscribe(topic string) ISubscriber
 }
 
-type ClientService struct {
+type clientService struct {
 	config         *config.ClientConfig
 	addr           string
 	publicKeyFile  string
@@ -29,8 +29,8 @@ type ClientService struct {
 	conn           *tls.Conn
 }
 
-func NewClientService(clientConfig *config.ClientConfig) IClient {
-	return &ClientService{
+func NewClientService(clientConfig *config.ClientConfig) ClientService {
+	return &clientService{
 		config:         clientConfig,
 		addr:           clientConfig.Host + ":" + clientConfig.Port,
 		publicKeyFile:  clientConfig.PublicKeyFile,
@@ -38,7 +38,7 @@ func NewClientService(clientConfig *config.ClientConfig) IClient {
 	}
 }
 
-func (c *ClientService) Connect() *tls.Conn {
+func (c *clientService) Connect() *tls.Conn {
 	cert := utils.LoadCertificate(c.config.PublicKeyFile, c.config.PrivateKeyFile)
 	tlsConfig := &tls.Config{
 		Certificates:       []tls.Certificate{*cert},
@@ -57,16 +57,16 @@ func (c *ClientService) Connect() *tls.Conn {
 	return conn
 }
 
-func (c *ClientService) GetConnection() *tls.Conn {
+func (c *clientService) GetConnection() *tls.Conn {
 	return c.conn
 }
 
-func (c *ClientService) Set(k string, v string) error {
+func (c *clientService) Set(k string, v string) error {
 	msg := fmt.Sprintf("set %s %s\n", k, v)
 	return c.Write([]byte(msg))
 }
 
-func (c *ClientService) Get(k string) (string, error) {
+func (c *clientService) Get(k string) (string, error) {
 	msg := fmt.Sprintf("get %s\n", k)
 	if err := c.Write([]byte(msg)); err != nil {
 		return "", err
@@ -74,12 +74,12 @@ func (c *ClientService) Get(k string) (string, error) {
 	return c.Read()
 }
 
-func (c *ClientService) Write(m []byte) error {
+func (c *clientService) Write(m []byte) error {
 	_, err := (*c.conn).Write(m)
 	return err
 }
 
-func (c *ClientService) Read() (string, error) {
+func (c *clientService) Read() (string, error) {
 	buf := make([]byte, 1024)
 	n, err := (*c.conn).Read(buf)
 	if err != nil {
@@ -88,7 +88,7 @@ func (c *ClientService) Read() (string, error) {
 	return string(buf[:n]), nil
 }
 
-func (c *ClientService) Subscribe(topic string) ISubscriber {
+func (c *clientService) Subscribe(topic string) ISubscriber {
 
 	msg := fmt.Sprintf("SUBSCRIBE %s\n", topic)
 	utils.WriteToServer(c.conn, msg)

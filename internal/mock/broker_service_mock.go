@@ -11,31 +11,31 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockIBroker is a mock of IBroker interface.
-type MockIBroker struct {
+// MockBrokerService is a mock of BrokerService interface.
+type MockBrokerService struct {
 	ctrl     *gomock.Controller
-	recorder *MockIBrokerMockRecorder
+	recorder *MockBrokerServiceMockRecorder
 }
 
-// MockIBrokerMockRecorder is the mock recorder for MockIBroker.
-type MockIBrokerMockRecorder struct {
-	mock *MockIBroker
+// MockBrokerServiceMockRecorder is the mock recorder for MockBrokerService.
+type MockBrokerServiceMockRecorder struct {
+	mock *MockBrokerService
 }
 
-// NewMockIBroker creates a new mock instance.
-func NewMockIBroker(ctrl *gomock.Controller) *MockIBroker {
-	mock := &MockIBroker{ctrl: ctrl}
-	mock.recorder = &MockIBrokerMockRecorder{mock}
+// NewMockBrokerService creates a new mock instance.
+func NewMockBrokerService(ctrl *gomock.Controller) *MockBrokerService {
+	mock := &MockBrokerService{ctrl: ctrl}
+	mock.recorder = &MockBrokerServiceMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockIBroker) EXPECT() *MockIBrokerMockRecorder {
+func (m *MockBrokerService) EXPECT() *MockBrokerServiceMockRecorder {
 	return m.recorder
 }
 
 // GetTopicFromConnection mocks base method.
-func (m *MockIBroker) GetTopicFromConnection(conn net.Conn) (string, bool) {
+func (m *MockBrokerService) GetTopicFromConnection(conn net.Conn) (string, bool) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTopicFromConnection", conn)
 	ret0, _ := ret[0].(string)
@@ -44,13 +44,13 @@ func (m *MockIBroker) GetTopicFromConnection(conn net.Conn) (string, bool) {
 }
 
 // GetTopicFromConnection indicates an expected call of GetTopicFromConnection.
-func (mr *MockIBrokerMockRecorder) GetTopicFromConnection(conn interface{}) *gomock.Call {
+func (mr *MockBrokerServiceMockRecorder) GetTopicFromConnection(conn interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTopicFromConnection", reflect.TypeOf((*MockIBroker)(nil).GetTopicFromConnection), conn)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTopicFromConnection", reflect.TypeOf((*MockBrokerService)(nil).GetTopicFromConnection), conn)
 }
 
 // IsSubscriptionConnection mocks base method.
-func (m *MockIBroker) IsSubscriptionConnection(arg0 net.Conn) bool {
+func (m *MockBrokerService) IsSubscriptionConnection(arg0 net.Conn) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsSubscriptionConnection", arg0)
 	ret0, _ := ret[0].(bool)
@@ -58,43 +58,43 @@ func (m *MockIBroker) IsSubscriptionConnection(arg0 net.Conn) bool {
 }
 
 // IsSubscriptionConnection indicates an expected call of IsSubscriptionConnection.
-func (mr *MockIBrokerMockRecorder) IsSubscriptionConnection(arg0 interface{}) *gomock.Call {
+func (mr *MockBrokerServiceMockRecorder) IsSubscriptionConnection(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSubscriptionConnection", reflect.TypeOf((*MockIBroker)(nil).IsSubscriptionConnection), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSubscriptionConnection", reflect.TypeOf((*MockBrokerService)(nil).IsSubscriptionConnection), arg0)
 }
 
 // Publish mocks base method.
-func (m *MockIBroker) Publish(conn net.Conn, topic, message string) {
+func (m *MockBrokerService) Publish(conn net.Conn, topic, message string) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Publish", conn, topic, message)
 }
 
 // Publish indicates an expected call of Publish.
-func (mr *MockIBrokerMockRecorder) Publish(conn, topic, message interface{}) *gomock.Call {
+func (mr *MockBrokerServiceMockRecorder) Publish(conn, topic, message interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Publish", reflect.TypeOf((*MockIBroker)(nil).Publish), conn, topic, message)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Publish", reflect.TypeOf((*MockBrokerService)(nil).Publish), conn, topic, message)
 }
 
 // Subscribe mocks base method.
-func (m *MockIBroker) Subscribe(conn net.Conn, topic string) {
+func (m *MockBrokerService) Subscribe(conn net.Conn, topic string) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Subscribe", conn, topic)
 }
 
 // Subscribe indicates an expected call of Subscribe.
-func (mr *MockIBrokerMockRecorder) Subscribe(conn, topic interface{}) *gomock.Call {
+func (mr *MockBrokerServiceMockRecorder) Subscribe(conn, topic interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Subscribe", reflect.TypeOf((*MockIBroker)(nil).Subscribe), conn, topic)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Subscribe", reflect.TypeOf((*MockBrokerService)(nil).Subscribe), conn, topic)
 }
 
 // Unsubscribe mocks base method.
-func (m *MockIBroker) Unsubscribe(conn net.Conn) {
+func (m *MockBrokerService) Unsubscribe(conn net.Conn) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Unsubscribe", conn)
 }
 
 // Unsubscribe indicates an expected call of Unsubscribe.
-func (mr *MockIBrokerMockRecorder) Unsubscribe(conn interface{}) *gomock.Call {
+func (mr *MockBrokerServiceMockRecorder) Unsubscribe(conn interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Unsubscribe", reflect.TypeOf((*MockIBroker)(nil).Unsubscribe), conn)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Unsubscribe", reflect.TypeOf((*MockBrokerService)(nil).Unsubscribe), conn)
 }

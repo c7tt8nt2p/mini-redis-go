@@ -20,10 +20,10 @@ type IClientApp interface {
 }
 
 type ClientApp struct {
-	clientService client.IClient
+	clientService client.ClientService
 }
 
-func NewClientApp(clientService client.IClient) *ClientApp {
+func NewClientApp(clientService client.ClientService) *ClientApp {
 	return &ClientApp{
 		clientService: clientService,
 	}

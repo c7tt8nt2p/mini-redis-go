@@ -10,45 +10,31 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockIRedis is a mock of IRedis interface.
-type MockIRedis struct {
+// MockRedisService is a mock of RedisService interface.
+type MockRedisService struct {
 	ctrl     *gomock.Controller
-	recorder *MockIRedisMockRecorder
+	recorder *MockRedisServiceMockRecorder
 }
 
-// MockIRedisMockRecorder is the mock recorder for MockIRedis.
-type MockIRedisMockRecorder struct {
-	mock *MockIRedis
+// MockRedisServiceMockRecorder is the mock recorder for MockRedisService.
+type MockRedisServiceMockRecorder struct {
+	mock *MockRedisService
 }
 
-// NewMockIRedis creates a new mock instance.
-func NewMockIRedis(ctrl *gomock.Controller) *MockIRedis {
-	mock := &MockIRedis{ctrl: ctrl}
-	mock.recorder = &MockIRedisMockRecorder{mock}
+// NewMockRedisService creates a new mock instance.
+func NewMockRedisService(ctrl *gomock.Controller) *MockRedisService {
+	mock := &MockRedisService{ctrl: ctrl}
+	mock.recorder = &MockRedisServiceMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockIRedis) EXPECT() *MockIRedisMockRecorder {
+func (m *MockRedisService) EXPECT() *MockRedisServiceMockRecorder {
 	return m.recorder
 }
 
-// Db mocks base method.
-func (m *MockIRedis) Db() map[string][]byte {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Db")
-	ret0, _ := ret[0].(map[string][]byte)
-	return ret0
-}
-
-// Db indicates an expected call of Db.
-func (mr *MockIRedisMockRecorder) Db() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Db", reflect.TypeOf((*MockIRedis)(nil).Db))
-}
-
 // ExistsByKey mocks base method.
-func (m *MockIRedis) ExistsByKey(key string) bool {
+func (m *MockRedisService) ExistsByKey(key string) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ExistsByKey", key)
 	ret0, _ := ret[0].(bool)
@@ -56,13 +42,13 @@ func (m *MockIRedis) ExistsByKey(key string) bool {
 }
 
 // ExistsByKey indicates an expected call of ExistsByKey.
-func (mr *MockIRedisMockRecorder) ExistsByKey(key interface{}) *gomock.Call {
+func (mr *MockRedisServiceMockRecorder) ExistsByKey(key interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExistsByKey", reflect.TypeOf((*MockIRedis)(nil).ExistsByKey), key)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExistsByKey", reflect.TypeOf((*MockRedisService)(nil).ExistsByKey), key)
 }
 
 // Get mocks base method.
-func (m *MockIRedis) Get(key string) []byte {
+func (m *MockRedisService) Get(key string) []byte {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", key)
 	ret0, _ := ret[0].([]byte)
@@ -70,37 +56,37 @@ func (m *MockIRedis) Get(key string) []byte {
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockIRedisMockRecorder) Get(key interface{}) *gomock.Call {
+func (mr *MockRedisServiceMockRecorder) Get(key interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockIRedis)(nil).Get), key)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockRedisService)(nil).Get), key)
 }
 
 // ReadCache mocks base method.
-func (m *MockIRedis) ReadCache(cacheFolder string) {
+func (m *MockRedisService) ReadCache(cacheFolder string) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "ReadCache", cacheFolder)
 }
 
 // ReadCache indicates an expected call of ReadCache.
-func (mr *MockIRedisMockRecorder) ReadCache(cacheFolder interface{}) *gomock.Call {
+func (mr *MockRedisServiceMockRecorder) ReadCache(cacheFolder interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadCache", reflect.TypeOf((*MockIRedis)(nil).ReadCache), cacheFolder)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadCache", reflect.TypeOf((*MockRedisService)(nil).ReadCache), cacheFolder)
 }
 
 // Set mocks base method.
-func (m *MockIRedis) Set(key string, value []byte) {
+func (m *MockRedisService) Set(key string, value []byte) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Set", key, value)
 }
 
 // Set indicates an expected call of Set.
-func (mr *MockIRedisMockRecorder) Set(key, value interface{}) *gomock.Call {
+func (mr *MockRedisServiceMockRecorder) Set(key, value interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockIRedis)(nil).Set), key, value)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockRedisService)(nil).Set), key, value)
 }
 
 // WriteCache mocks base method.
-func (m *MockIRedis) WriteCache(cacheFolder, k string, v []byte) error {
+func (m *MockRedisService) WriteCache(cacheFolder, k string, v []byte) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WriteCache", cacheFolder, k, v)
 	ret0, _ := ret[0].(error)
@@ -108,7 +94,7 @@ func (m *MockIRedis) WriteCache(cacheFolder, k string, v []byte) error {
 }
 
 // WriteCache indicates an expected call of WriteCache.
-func (mr *MockIRedisMockRecorder) WriteCache(cacheFolder, k, v interface{}) *gomock.Call {
+func (mr *MockRedisServiceMockRecorder) WriteCache(cacheFolder, k, v interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteCache", reflect.TypeOf((*MockIRedis)(nil).WriteCache), cacheFolder, k, v)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WriteCache", reflect.TypeOf((*MockRedisService)(nil).WriteCache), cacheFolder, k, v)
 }

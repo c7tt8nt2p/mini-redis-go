@@ -24,9 +24,9 @@ type IServer interface {
 
 type ServerService struct {
 	config            *config.ServerConfig
-	redisService      core.IRedis
-	brokerService     core.IBroker
-	cmdHandlerService handler.ICmdHandler
+	redisService      core.RedisService
+	brokerService     core.BrokerService
+	cmdHandlerService handler.CmdHandlerService
 	listener          *net.Listener
 	Addr              string
 	cacheFolder       string
@@ -34,11 +34,13 @@ type ServerService struct {
 }
 
 func NewServerService(serverConfig *config.ServerConfig) IServer {
+	brokerService := core.NewBrokerService()
+	redisService := core.NewRedisService()
 	return &ServerService{
 		config:            serverConfig,
-		redisService:      core.NewRedisService(),
-		brokerService:     core.NewBrokerService(),
-		cmdHandlerService: handler.NewCmdHandlerService(),
+		redisService:      redisService,
+		brokerService:     brokerService,
+		cmdHandlerService: handler.NewCmdHandlerService(redisService, brokerService),
 		Addr:              serverConfig.Host + ":" + serverConfig.Port,
 		cacheFolder:       serverConfig.CacheFolder,
 		stopSignal:        make(chan struct{}),
@@ -164,7 +166,6 @@ func handleNonSubscriptionConnection(serverService *ServerService, conn net.Conn
 			log.Println("Error sending response to getCmd: ", err)
 		}
 	case parser.SubscribeCmd:
-		fmt.Println("ok SubscribeCmd")
 		err := serverService.cmdHandlerService.SubscribeCmdHandler(conn, message)
 		if err != nil {
 			log.Println("Error subscribing response to getCmd: ", err)

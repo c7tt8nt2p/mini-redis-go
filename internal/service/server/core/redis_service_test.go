@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-func NewRedisServiceTestInstance(cacheReader *mock.MockICacheReader, cacheWriter *mock.MockICacheWriter) *RedisService {
-	return &RedisService{
+func NewRedisServiceTestInstance(cacheReader *mock.MockCacheReaderService, cacheWriter *mock.MockCacheWriterService) *redisService {
+	return &redisService{
 		cacheReaderService: cacheReader,
 		cacheWriterService: cacheWriter,
 		db: &MyDb{
@@ -28,7 +28,7 @@ func TestRedisService_Get(t *testing.T) {
 	key := "k1"
 	value := []byte("v1")
 
-	service := NewRedisServiceTestInstance(mock.NewMockICacheReader(ctrl), mock.NewMockICacheWriter(ctrl))
+	service := NewRedisServiceTestInstance(mock.NewMockCacheReaderService(ctrl), mock.NewMockCacheWriterService(ctrl))
 	service.db.cache[key] = value
 
 	assert.Equal(t, value, service.Get(key))
@@ -39,7 +39,7 @@ func TestRedisService_Set(t *testing.T) {
 	key := "k2"
 	value := []byte("v2")
 
-	service := NewRedisServiceTestInstance(mock.NewMockICacheReader(ctrl), mock.NewMockICacheWriter(ctrl))
+	service := NewRedisServiceTestInstance(mock.NewMockCacheReaderService(ctrl), mock.NewMockCacheWriterService(ctrl))
 	service.Set(key, value)
 
 	assert.Equal(t, value, service.db.cache[key])
@@ -50,7 +50,7 @@ func TestRedisService_ExistsByKey(t *testing.T) {
 	key := "k3"
 	value := []byte("v3")
 
-	service := NewRedisServiceTestInstance(mock.NewMockICacheReader(ctrl), mock.NewMockICacheWriter(ctrl))
+	service := NewRedisServiceTestInstance(mock.NewMockCacheReaderService(ctrl), mock.NewMockCacheWriterService(ctrl))
 	service.Set(key, value)
 
 	assert.True(t, service.ExistsByKey(key))
@@ -58,8 +58,8 @@ func TestRedisService_ExistsByKey(t *testing.T) {
 
 func TestRedisService_ReadCache(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	cacheReader := mock.NewMockICacheReader(ctrl)
-	service := NewRedisServiceTestInstance(cacheReader, mock.NewMockICacheWriter(ctrl))
+	cacheReader := mock.NewMockCacheReaderService(ctrl)
+	service := NewRedisServiceTestInstance(cacheReader, mock.NewMockCacheWriterService(ctrl))
 	tempFolder := "/temp"
 	cacheReader.EXPECT().ReadFromFile(tempFolder).Return(map[string][]byte{"cache1": []byte("cacheValue1")})
 
@@ -71,8 +71,8 @@ func TestRedisService_ReadCache(t *testing.T) {
 
 func TestRedisService_WriteCache(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	cacheWriter := mock.NewMockICacheWriter(ctrl)
-	service := NewRedisServiceTestInstance(mock.NewMockICacheReader(ctrl), cacheWriter)
+	cacheWriter := mock.NewMockCacheWriterService(ctrl)
+	service := NewRedisServiceTestInstance(mock.NewMockCacheReaderService(ctrl), cacheWriter)
 	tempFolder := "/temp"
 	key := "cache1"
 	value := []byte("cacheValue1")

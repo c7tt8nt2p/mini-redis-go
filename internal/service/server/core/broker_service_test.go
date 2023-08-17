@@ -8,13 +8,6 @@ import (
 	"testing"
 )
 
-func NewBrokerServiceTestInstance() *BrokerService {
-	return &BrokerService{
-		clients:     map[net.Conn]string{},
-		subscribers: map[string][]net.Conn{},
-	}
-}
-
 func TestNewBrokerService(t *testing.T) {
 	service := NewBrokerService()
 
@@ -26,7 +19,7 @@ func TestBrokerService_IsSubscriptionConnection(t *testing.T) {
 	conn1 := mock.NewMockConn(ctrl)
 	conn2 := mock.NewMockConn(ctrl)
 
-	service := NewBrokerServiceTestInstance()
+	service := NewBrokerService()
 	service.clients[conn1] = "topic1"
 
 	assert.True(t, service.IsSubscriptionConnection(conn1))
@@ -39,7 +32,7 @@ func TestBrokerService_Subscribe(t *testing.T) {
 	conn2 := mock.NewMockConn(ctrl)
 	topic := "topicA"
 
-	service := NewBrokerServiceTestInstance()
+	service := NewBrokerService()
 	service.Subscribe(conn1, topic)
 
 	assert.Equal(t, 1, len(service.subscribers[topic]))
@@ -56,7 +49,7 @@ func TestBrokerService_Unsubscribe(t *testing.T) {
 	conn.EXPECT().Close().Times(1)
 	topic := "topicB"
 
-	service := NewBrokerServiceTestInstance()
+	service := NewBrokerService()
 	service.Subscribe(conn, topic)
 	service.Unsubscribe(conn)
 
@@ -70,7 +63,7 @@ func TestBrokerService_GetTopicFromConnection(t *testing.T) {
 	conn := mock.NewMockConn(ctrl)
 	topic := "topicC"
 
-	service := NewBrokerServiceTestInstance()
+	service := NewBrokerService()
 	service.clients[conn] = topic
 
 	response, _ := service.GetTopicFromConnection(conn)
@@ -85,7 +78,7 @@ func TestBrokerService_Publish(t *testing.T) {
 	message := "hello"
 	conn2.EXPECT().Write([]byte(message))
 
-	service := NewBrokerServiceTestInstance()
+	service := NewBrokerService()
 	service.Subscribe(conn1, topic)
 	service.Subscribe(conn2, topic)
 

@@ -13,7 +13,7 @@ type ISubscriber interface {
 }
 
 type Subscriber struct {
-	c *ClientService
+	c *clientService
 }
 
 func (s *Subscriber) NextMessage() (string, error) {
