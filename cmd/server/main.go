@@ -18,7 +18,7 @@ func GetServerConfig() *config.ServerConfig {
 	privateKeyFile := flag.String("privatekey", defaultPrivateKeyFile, "a server private key file")
 	hostFlag := flag.String("host", defaultHost, "a connection host to listen on")
 	portFlag := flag.String("port", defaultPort, "a connection port to listen on")
-	cacheFolder := flag.String("cachefolder", defaultCacheFolder, "a connection port to connect to")
+	cacheFolder := flag.String("cachefolder", defaultCacheFolder, "a cache folder to store states")
 	flag.Parse()
 
 	return &config.ServerConfig{
