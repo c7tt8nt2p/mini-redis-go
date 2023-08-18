@@ -10,32 +10,28 @@ import (
 func StartServer(cacheFolder string) server.IServer {
 	serverConfig := GetServerConfigTest(cacheFolder)
 	s := server.NewServerService(serverConfig)
-	go s.Start()
+	go s.StartNonSecure()
 	return s
 }
 
 func GetClientConfigTest() *config.ClientConfig {
 	return &config.ClientConfig{
-		PublicKeyFile:  "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/client/client.pem",
-		PrivateKeyFile: "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/client/client.key",
-		Host:           "localhost",
-		Port:           "6973",
+		Host: "localhost",
+		Port: "6973",
 	}
 }
 
 func GetServerConfigTest(cacheFolder string) *config.ServerConfig {
 	return &config.ServerConfig{
-		PublicKeyFile:  "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/server/server.pem",
-		PrivateKeyFile: "/Users/chantapat.t/GolandProjects/mini-redis-go/internal/config/ssl/server/server.key",
-		Host:           "localhost",
-		Port:           "6973",
-		CacheFolder:    cacheFolder,
+		Host:        "localhost",
+		Port:        "6973",
+		CacheFolder: cacheFolder,
 	}
 }
 
 func ConnectToServer(clientConfig *config.ClientConfig) client.ClientService {
 	c := client.NewClientService(clientConfig)
-	c.Connect()
+	c.ConnectNonSecure()
 	return c
 }
 

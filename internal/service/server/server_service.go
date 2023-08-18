@@ -17,6 +17,7 @@ import (
 
 type IServer interface {
 	Start()
+	StartNonSecure()
 	Stop()
 	GetCacheFolder() string
 	SetCacheFolder(cacheFolder string)
@@ -56,6 +57,19 @@ func (s *ServerService) Start() {
 		MaxVersion:   tls.VersionTLS13,
 	}
 	listener, err := tls.Listen("tcp", s.Addr, tlsConfig)
+	if err != nil {
+		log.Panic("error when initialize a connection: ", err)
+	}
+	s.listener = &listener
+	defer func(listener net.Listener) {
+		_ = listener.Close()
+	}(listener)
+
+	s.listen(listener)
+}
+
+func (s *ServerService) StartNonSecure() {
+	listener, err := net.Listen("tcp", s.Addr)
 	if err != nil {
 		log.Panic("error when initialize a connection: ", err)
 	}

@@ -5,15 +5,18 @@ import (
 	"crypto/rand"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"mini-redis-go/internal/config"
 	"mini-redis-go/internal/utils"
+	"net"
 	"os"
 )
 
 // ClientService this is a client API interface that contains functions that use can do and interact with the Redis
 type ClientService interface {
-	Connect() *tls.Conn
-	GetConnection() *tls.Conn
+	Connect() io.ReadWriteCloser
+	ConnectNonSecure() io.ReadWriteCloser
+	GetConnection() io.ReadWriteCloser
 	Set(k string, v string) error
 	Get(k string) (string, error)
 	Write(m []byte) error
@@ -26,7 +29,7 @@ type clientService struct {
 	addr           string
 	publicKeyFile  string
 	privateKeyFile string
-	conn           *tls.Conn
+	conn           io.ReadWriteCloser
 }
 
 func NewClientService(clientConfig *config.ClientConfig) ClientService {
@@ -38,7 +41,7 @@ func NewClientService(clientConfig *config.ClientConfig) ClientService {
 	}
 }
 
-func (c *clientService) Connect() *tls.Conn {
+func (c *clientService) Connect() io.ReadWriteCloser {
 	cert := utils.LoadCertificate(c.config.PublicKeyFile, c.config.PrivateKeyFile)
 	tlsConfig := &tls.Config{
 		Certificates:       []tls.Certificate{*cert},
@@ -57,7 +60,17 @@ func (c *clientService) Connect() *tls.Conn {
 	return conn
 }
 
-func (c *clientService) GetConnection() *tls.Conn {
+func (c *clientService) ConnectNonSecure() io.ReadWriteCloser {
+	conn, err := net.Dial("tcp", c.addr)
+	if err != nil {
+		fmt.Println("Error when connecting to a server:", err.Error())
+		os.Exit(1)
+	}
+	c.conn = conn
+	return conn
+}
+
+func (c *clientService) GetConnection() io.ReadWriteCloser {
 	return c.conn
 }
 
@@ -75,13 +88,13 @@ func (c *clientService) Get(k string) (string, error) {
 }
 
 func (c *clientService) Write(m []byte) error {
-	_, err := (*c.conn).Write(m)
+	_, err := c.conn.Write(m)
 	return err
 }
 
 func (c *clientService) Read() (string, error) {
 	buf := make([]byte, 1024)
-	n, err := (*c.conn).Read(buf)
+	n, err := c.conn.Read(buf)
 	if err != nil {
 		return "", err
 	}

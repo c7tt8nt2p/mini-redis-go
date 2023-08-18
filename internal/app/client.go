@@ -2,7 +2,6 @@ package app
 
 import (
 	"bufio"
-	"crypto/tls"
 	"fmt"
 	"io"
 	"mini-redis-go/internal/service/client"
@@ -12,7 +11,7 @@ import (
 
 // Client is an entrypoint when instantiating a new client
 type Client interface {
-	ConnectToServer() *tls.Conn
+	ConnectToServer() io.ReadWriteCloser
 	// OnMessageReceivedFromServer register a function to handles messages from the server
 	OnMessageReceivedFromServer(handlerFunc func(messageFromServer string))
 	// OnMessageReceivedFromClient register a function to handles messages to the server
@@ -29,7 +28,7 @@ func NewClientApp(clientService client.ClientService) *ClientApp {
 	}
 }
 
-func (c *ClientApp) ConnectToServer() *tls.Conn {
+func (c *ClientApp) ConnectToServer() io.ReadWriteCloser {
 	return c.clientService.Connect()
 }
 

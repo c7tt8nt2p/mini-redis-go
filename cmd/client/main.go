@@ -1,9 +1,9 @@
 package main
 
 import (
-	"crypto/tls"
 	"flag"
 	"fmt"
+	"io"
 	"mini-redis-go/internal/config"
 	"os"
 	"strings"
@@ -34,7 +34,7 @@ func GetClientConfig() *config.ClientConfig {
 func main() {
 	myApp := InitializeClient()
 	conn := myApp.ConnectToServer()
-	defer func(connection *tls.Conn) {
+	defer func(connection io.ReadWriteCloser) {
 		err := connection.Close()
 		if err != nil {
 			fmt.Println("Error when closing a connection:", err.Error())
